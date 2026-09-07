@@ -1,0 +1,91 @@
+{
+  "scope": "Source imports/resources; final linked-code and symbol-font component audit remains separate",
+  "files": [
+    {
+      "dependency": "libxev",
+      "source": "LICENSE",
+      "sha256": "fcd26bcead569a910dd778cb864e027683498ca414e15db1694a5893eee1b835",
+      "zig_package_hash": "libxev-0.0.0-86vtcwIRFADbH4hk-EjROXxlrKIRPQdA41XiTSytYO-F",
+      "archive_sha256": "41f059923fb7138d6f3c6beddfdc3e5db4da4b81e11e43e910b82d7ec9383984"
+    },
+    {
+      "dependency": "vaxis",
+      "source": "LICENSE",
+      "sha256": "cca4ffa6a45c0b17d3e9840b4cbe5be1e76ab84fda69850e0cb3f117729eeeea",
+      "zig_package_hash": "vaxis-0.6.0-BWNV_CrbCQCscGpzsAlR402rYQ_tV3aAl081c2iRRkka",
+      "archive_sha256": "b543786e82d63f219612a2c49044638779f3c8f47b0dc8c30d8d6050931595ed"
+    },
+    {
+      "dependency": "zig_objc",
+      "source": "LICENSE",
+      "sha256": "fcd26bcead569a910dd778cb864e027683498ca414e15db1694a5893eee1b835",
+      "zig_package_hash": "zig_objc-0.0.0-Ir_Sp9gsAQCPAJc0oF5xoWePHWP6Y6tCphDeyNUThJoi",
+      "archive_sha256": "3314f0fe1bddd2c386544558328761adf9f05d5aa6b0d46ec71632e29eb1cfc2"
+    },
+    {
+      "dependency": "uucode",
+      "source": "LICENSE.md",
+      "sha256": "312e901e142be2477b4ca859e9311f9e3f80d33372991759b7921c1893605f33",
+      "zig_package_hash": "uucode-0.2.0-ZZjBPlK5VADj7fdoq7G8LIHzD5o6FSkcBXXrRWr4jnrA",
+      "archive_sha256": "3c571e2e2c1dd6d67d59e7a29322c718a90465ccb0df362e14feafcdde555ed0"
+    },
+    {
+      "dependency": "zf",
+      "source": "LICENSE",
+      "sha256": "0629000344ad0dc3c6e0e4c1b0c4a5cacf090e17d56e8bc5272705e3d35b7def",
+      "zig_package_hash": "zf-0.11.0-OIRy8X-RAAAwaRXHMYpj2uvBnuGTZWEE_3V7acqHQNtW",
+      "archive_sha256": "17dcfc79623c072a9df298c2a2b8309059657ebb6805a86b62fb0eaff942cf1a"
+    },
+    {
+      "dependency": "nerd_fonts_symbols_only",
+      "source": "LICENSE",
+      "sha256": "84a7a98c82140fb12c37fe42b93805baa16024cb3e5acc599b7ffe612c55d847",
+      "zig_package_hash": "N-V-__8AAMVLTABmYkLqhZPLXnMl-KyN38R8UVYqGrxqO26s",
+      "archive_sha256": "f0830fb4ef816f278967c4702421dbde51af8b0bcff976f077e734b0bc218a8a"
+    },
+    {
+      "dependency": "z2d",
+      "source": "LICENSE",
+      "sha256": "c3c0b845181a67c2f926485299855769afa675bc90b18904c3087ae884cb1873",
+      "repository": "vancluever/z2d",
+      "revision": "7dbae85c81784dba9988320bf9543ed9a81350c8",
+      "reason": "Notice omitted from the cached Zig source archive"
+    },
+    {
+      "dependency": "z2d",
+      "source": "COPYING",
+      "sha256": "d8d2562a7cb68ffdfe91fc66af1ed4a8a4e272aa4ab59bea7451ba34b9aba3d4",
+      "repository": "vancluever/z2d",
+      "revision": "7dbae85c81784dba9988320bf9543ed9a81350c8",
+      "reason": "Notice omitted from the cached Zig source archive"
+    },
+    {
+      "dependency": "uucode",
+      "source": "licenses/LICENSE_Bjoern_Hoehrmann",
+      "sha256": "de219cece932aad5a817bf763393d8d149d378a15d2ad5320e3331eac07626dd",
+      "repository": "jacobsandlund/uucode",
+      "revision": "2826a37a4562284fdacd8fa029d49509cc9bffcd",
+      "reason": "Notice omitted from the cached Zig source archive"
+    },
+    {
+      "dependency": "uucode",
+      "source": "licenses/LICENSE_unicode",
+      "sha256": "1eda5a3b026870c737b22e8bcd4954338612c790db688242e003f41a4fa95175",
+      "repository": "jacobsandlund/uucode",
+      "revision": "2826a37a4562284fdacd8fa029d49509cc9bffcd",
+      "reason": "Notice omitted from the cached Zig source archive"
+    },
+    {
+      "dependency": "stb",
+      "source": "src/stb/stb_image.h: MIT notice",
+      "sha256": "f7e9ed73812898371959e214ac4d82df98152c658f2270f7e9766d833d155e71",
+      "core_revision": "c4e16970a803b170e352432424f44192cb59f3ac"
+    },
+    {
+      "dependency": "stb",
+      "source": "src/stb/stb_image_resize.h: MIT notice",
+      "sha256": "f7e9ed73812898371959e214ac4d82df98152c658f2270f7e9766d833d155e71",
+      "core_revision": "c4e16970a803b170e352432424f44192cb59f3ac"
+    }
+  ]
+}

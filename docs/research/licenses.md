@@ -71,3 +71,14 @@ python3 singleheader/amalgamate.py \
 ```
 
 [simdutf-provenance.json](simdutf-provenance.json) records the flags, immutable revisions, full vendored-file hashes and timestamp-excluded body hashes. `Spike/App/Notices/Simdutf.txt` includes the upstream MIT/Apache license texts and the BSD-style instruction-set detection notice embedded in the vendored header. The third-party checkout and app dependency pins were not modified. Other native/resource inventory and static-link distribution review remain open.
+
+## Zig and resource notice inventory — 2026-09-07
+
+`Spike/App/Notices/ZigAndResources.txt` retains 12 notices for libxev, vaxis, zig-objc, uucode, zf, z2d, the Nerd Fonts symbol archive and stb. [zig-resource-notices.json](zig-resource-notices.json) records exact source hashes and archive/revision provenance. These are source-import/resource inventory entries; inclusion in the manifest is not proof that every library survives the final Release linker.
+
+Two package-archive omissions required looking at the immutable upstream revisions:
+
+- z2d's cached source archive omits `LICENSE` and `COPYING`. Its `src/z2d.zig` identifies MPL-2.0 and copyright Chris Marchesi. Both upstream notice files were obtained at `7dbae85c81784dba9988320bf9543ed9a81350c8`, the revision named in Ghostty's source URL. Do not describe the entire native set as permissive-only.
+- uucode's `LICENSE.md` references `licenses/LICENSE_Bjoern_Hoehrmann` and `licenses/LICENSE_unicode`, but the cached archive omits those files. They were recovered from the declared upstream revision `2826a37a4562284fdacd8fa029d49509cc9bffcd` and retained alongside the MIT notice.
+
+The two stb headers' complete MIT alternatives were copied directly from the pinned Ghostty source. The Nerd Fonts archive's top-level MIT notice is included, but individual symbol-source license attribution remains a separate open item. Runtime/toolchain, shell resources, final Release linkage and applicable copyleft distribution obligations still require closure.
