@@ -137,3 +137,16 @@ These paths are relative to this document; the component spike now adds the conc
 
 - `../Spike/App/RemoteTerminal.swift`: actual Keychain identity, local-auth gate, input FIFO, reconnect generation and paste-intent guards (TM-001, 002, 004, 005). A physical phone attempt verified key loading, host match, authentication, PTY and shell output; input/reconnect/lock acceptance remains incomplete.
 - `../Spike/App/MoshDeckSpikeApp.swift` also supplies a window-level inactive-scene cover (including sheets) and explicitly denies remote clipboard read/write in terminal configuration. The wrapper's confirmation callback alone would not block its default allowed clipboard writes.
+
+## Source audit checkpoint — 2026-09-07
+
+Reviewed the current first-party Keychain, authentication, SSH verification, clipboard/share, logging and diagnostic call sites, plus the pinned wrapper's `TerminalDebugLog` default. This is a bounded source review, not proof against a compromised dependency or a complete device privacy test.
+
+- Identity creation and profile/draft insertion use `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`; no synchronizable attribute or private-key Share/Copy action exists. Identity loading is gated by app unlock in the remote model. The software Ed25519 key remains extractable by code running with the app's authority; no Secure Enclave claim applies.
+- SSH host validation compares parsed public keys for equality. There is no trust-all branch. Existing negative OpenSSH and non-retryable host/auth tests cover substitution and rejection.
+- Diagnostic call sites use fixed stages/events, numeric errors and a public identity fingerprint. Generic error capture excludes NSError domain, localized description and userInfo. No first-party call site exports terminal bytes or drafts. The protected development diagnostic file contains metadata, not a transcript. Its comment saying “no keys” means no key material; the public fingerprint is intentionally included.
+- The pinned wrapper defaults `TerminalDebugLog.isEnabled` to false. The fixture additionally calls `disable`; no app call enables it. The wrapper does contain payload logging code, so preserving the disabled setting remains part of dependency upgrade review.
+- Remote OSC clipboard reads/writes are denied by terminal configuration; URL auto-opening is disabled. Native viewport selection Copy uses the normal UIKit clipboard and is **not** currently marked local-only. This is an outstanding clipboard privacy limitation, distinct from remote clipboard access. Public-key sharing is intentional.
+- App lock/scene cover and selection/draft concealment exist in source, but complete physical app-switcher, native Copy and VoiceOver acceptance remains pending. Source inspection cannot establish those visual outcomes.
+
+The native dependency audit also found linked LGPL libintl; see [license findings](research/licenses.md). Distribution/provenance review remains open. No credential leakage or host-verification bypass was found in the inspected first-party paths; this statement is limited to those paths and tests.
