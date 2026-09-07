@@ -56,6 +56,18 @@ Adding the license text does not close distribution compliance. Before distribut
 
 Archive-member inspection supports these native dependencies: `ftbase.o`, `png.o`, `inflate.o`, Oniguruma regex/encoding objects, `libhighway_zcu.o`, and `wuffs-v0.4.o` are present in the rebuilt iOS arm64 archive. This is archive inclusion evidence; final Release dead stripping and component-level source attribution still need their own review.
 
-A concrete metadata discrepancy remains: `pkg/simdutf/build.zig.zon` declares version 5.2.8, while the vendored `pkg/simdutf/vendor/simdutf.h` defines `SIMDUTF_VERSION` as 9.0.0. `simdutf.o` is present in the archive. Do not generate a 5.2.8 notice/SBOM entry solely from the package version. Trace the actual vendored source and its embedded third-party notices before completing that component.
+A concrete metadata discrepancy was identified (reproduction result below): `pkg/simdutf/build.zig.zon` declares version 5.2.8, while the vendored `pkg/simdutf/vendor/simdutf.h` defines `SIMDUTF_VERSION` as 9.0.0. `simdutf.o` is present in the archive. Do not generate a 5.2.8 notice/SBOM entry solely from the package version. Trace the actual vendored source and its embedded third-party notices before completing that component.
 
-The remaining inventory includes simdutf, stb, pure-Zig/runtime dependencies, symbol-font components and shell resources, plus toolchain/runtime licensing as actually linked. libintl is separately documented above. None of these partial notice additions closes the full distribution gate.
+After the simdutf reproduction below, the remaining inventory includes stb, pure-Zig/runtime dependencies, symbol-font components and shell resources, plus toolchain/runtime licensing as actually linked. libintl is separately documented above. None of these partial notice additions closes the full distribution gate.
+
+### simdutf discrepancy resolved by reproduction — 2026-09-07
+
+The vendored source is a feature-reduced amalgamation of simdutf **9.0.0**, upstream commit `ca7acbcea967b5dcbab490066e99e3a6e6925539`; the Ghostty package's 5.2.8 value is stale metadata. Direct comparison with the release's full-feature single-header files initially differed. Regenerating from the immutable source with the following command reproduced both vendored files byte-for-byte after removing only their generated timestamp first line:
+
+```sh
+python3 singleheader/amalgamate.py \
+  --with-utf8 --with-utf32 --with-base64 --with-ascii --with-latin1 \
+  --no-zip --no-readme --output-dir regenerated
+```
+
+[simdutf-provenance.json](simdutf-provenance.json) records the flags, immutable revisions, full vendored-file hashes and timestamp-excluded body hashes. `Spike/App/Notices/Simdutf.txt` includes the upstream MIT/Apache license texts and the BSD-style instruction-set detection notice embedded in the vendored header. The third-party checkout and app dependency pins were not modified. Other native/resource inventory and static-link distribution review remain open.
