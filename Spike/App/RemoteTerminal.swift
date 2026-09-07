@@ -70,6 +70,7 @@ final class RemoteTerminalModel: ObservableObject {
     @Published var publicKey = ""
     @Published var draft = ""
     @Published var terminal: TerminalViewState?
+    @Published var selection: TerminalSelectionSnapshot?
     @Published var pasteWarning = false
     @Published private(set) var lifecycle = ConnectionLifecycle()
     @Published private(set) var appLock = AppLockPolicy()
@@ -208,6 +209,7 @@ final class RemoteTerminalModel: ObservableObject {
         lifecycle.note("app lock: \(reason)")
         saveSession()
         appLock.lock()
+        selection = nil
         lockTask?.cancel()
         lockTask = nil
         stopTransport()
@@ -301,6 +303,11 @@ final class RemoteTerminalModel: ObservableObject {
                 surface.makePlatformView = { PlainTextTerminalView(frame: .zero) }
                 surface.configuration = .init(backend: .inMemory(session), fontSize: 14)
                 surface.onClipboardConfirmationRequest = { $0.respond(allow: false) }
+                surface.onTextSelectionRequest = { [weak self] request in
+                    guard let self, self.lifecycle.owns(id), self.isLive, self.unlocked,
+                        self.sceneActive else { return }
+                    self.selection = TerminalSelectionSnapshot(text: request.text, anchor: request.anchorRange)
+                }
                 candidate = surface
                 // First connection may show the blank candidate. On reconnect the
                 // old screen stays until remote acceptance and output are confirmed.
@@ -503,7 +510,10 @@ final class RemoteTerminalModel: ObservableObject {
         }
         scheduleBackgroundLock()
         terminal?.isSurfaceVisible = sceneActive
-        if !sceneActive { terminal?.attachedPlatformView?.resignFirstResponder() }
+        if !sceneActive {
+            selection = nil
+            terminal?.attachedPlatformView?.resignFirstResponder()
+        }
         if phase == .background {
             stopTransport()
             persistDiagnostics()
@@ -611,9 +621,22 @@ struct RemoteTerminalScreen: View {
         .overlay { if phase != .active { Color.black.ignoresSafeArea() } }
         .onChange(of: phase) { _, value in model.phaseChanged(value) }
         .onChange(of: model.unlocked) { _, unlocked in
-            if !unlocked { composing = false }
+            if !unlocked {
+                composing = false
+                model.selection = nil
+            }
         }
 
+        .sheet(item: $model.selection) { snapshot in
+            NavigationStack {
+                TerminalSelectionText(snapshot: snapshot)
+                    .navigationTitle("Select terminal text")
+                    .toolbar { Button("Done") { model.selection = nil } }
+                    .overlay {
+                        if !model.unlocked || phase != .active { Color.black.ignoresSafeArea() }
+                    }
+            }
+        }
         .sheet(isPresented: $composing) {
             NavigationStack {
                 VStack {
@@ -633,4 +656,36 @@ struct RemoteTerminalScreen: View {
             }
         }
     }
+}
+
+// A user-requested viewport snapshot: memory-only and discarded on dismissal or inactivity.
+struct TerminalSelectionSnapshot: Identifiable {
+    let id = UUID()
+    let text: String
+    let anchor: NSRange?
+}
+
+private struct TerminalSelectionText: UIViewRepresentable {
+    let snapshot: TerminalSelectionSnapshot
+
+    func makeUIView(context: Context) -> UITextView {
+        let view = UITextView()
+        view.isEditable = false
+        view.isSelectable = true
+        view.font = UIFontMetrics.default.scaledFont(for: .monospacedSystemFont(ofSize: 14, weight: .regular))
+        view.adjustsFontForContentSizeCategory = true
+        view.accessibilityLabel = "Terminal text for selection and copy"
+        view.text = snapshot.text
+        let length = (snapshot.text as NSString).length
+        if let anchor = snapshot.anchor, anchor.location >= 0, anchor.length >= 0,
+            anchor.location <= length,
+            anchor.length <= length - anchor.location {
+            view.selectedRange = anchor
+        } else {
+            view.selectedRange = NSRange(location: 0, length: length)
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UITextView, context: Context) {}
 }

@@ -31,3 +31,7 @@ Daily-use MVP matrix, September 7, 2026. PASS requires the actual physical app p
 - iTerm2: real UI attachment, both directions of detach and active-client resizing. A generic local PTY passed the spike but cannot fill these rows.
 
 Recommended synthetic fixture data should be public/disposable and not change live infrastructure. Codex acceptance must use a disposable repository; agent APIs are excluded. Exact version, build revision, operator, test steps and observed failure stage should accompany each completed row.
+
+## Viewport copy implementation checkpoint
+
+The pinned Ghostty UIKit wrapper requires `onTextSelectionRequest` for long-press selection. MoshDeck now handles that request with a read-only native text selection sheet and the wrapper-provided UTF-16 anchor. The snapshot covers the viewport, not all scrollback. It stays in memory, is discarded on dismissal, inactivity or explicit lock, and is concealed while inactive or locked. Remote OSC clipboard access remains denied. Physical long-press, selection, Copy, Unicode round-trip and privacy-cover acceptance are still NOT TESTED.
