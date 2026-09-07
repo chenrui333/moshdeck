@@ -486,7 +486,9 @@ extension ConnectionFailure {
                 retryable: value == .timedOut || value == .disconnected)
         }
         if let value = error as? NIOSSHError {
-            return .init(stage: stage, code: "NIOSSHError.\(value.type)")
+            return .init(
+                stage: stage, code: "NIOSSHError.\(value.type)",
+                retryable: value.type == .tcpShutdown)
         }
         if let value = error as? IOError {
             return .init(stage: stage, code: "IOError errno=\(value.errnoCode)", retryable: true)

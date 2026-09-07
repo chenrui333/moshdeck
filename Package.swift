@@ -21,6 +21,9 @@ let package = Package(
             ]),
         .testTarget(
             name: "MoshDeckCoreTests",
-            dependencies: ["MoshDeckCore", .product(name: "Crypto", package: "swift-crypto")]),
+            dependencies: [
+                "MoshDeckCore", .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "NIOSSH", package: "swift-nio-ssh"),
+            ]),
     ]
 )
