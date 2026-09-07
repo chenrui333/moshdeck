@@ -552,6 +552,7 @@ struct RemoteTerminalScreen: View {
     @StateObject private var model = RemoteTerminalModel()
     @Environment(\.scenePhase) private var phase
     @State private var composing = false
+    @State private var confirmingClearDraft = false
 
     var body: some View {
         VStack(spacing: 5) {
@@ -637,7 +638,7 @@ struct RemoteTerminalScreen: View {
                     }
             }
         }
-        .sheet(isPresented: $composing) {
+        .sheet(isPresented: $composing, onDismiss: { model.saveSession() }) {
             NavigationStack {
                 VStack {
                     Text("\(model.host) · \(model.useTmux ? model.sessionName : "shell")").font(.caption)
@@ -645,8 +646,27 @@ struct RemoteTerminalScreen: View {
                     Button("Paste without added Enter") { model.pasteDraft() }.disabled(!model.isLive)
                     Button("Enter key") { model.terminal?.sendKey(.enter) }.disabled(!model.isLive)
                 }.padding().navigationTitle("Compose")
-                    .overlay { if !model.unlocked { Color.black.ignoresSafeArea() } }
-                    .toolbar { Button("Done") { composing = false } }
+                    .overlay {
+                        if !model.unlocked || phase != .active { Color.black.ignoresSafeArea() }
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Clear draft", role: .destructive) { confirmingClearDraft = true }
+                                .disabled(model.draft.isEmpty)
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { composing = false }
+                        }
+                    }
+                    .alert("Clear this draft?", isPresented: $confirmingClearDraft) {
+                        Button("Clear draft", role: .destructive) {
+                            model.draft = ""
+                            model.saveSession()
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text("This removes the saved draft from this device.")
+                    }
                     .confirmationDialog(
                         "Pasted newlines may execute in a shell. Inspect the host and foreground program before pasting.",
                         isPresented: $model.pasteWarning, titleVisibility: .visible

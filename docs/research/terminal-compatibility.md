@@ -35,3 +35,7 @@ Recommended synthetic fixture data should be public/disposable and not change li
 ## Viewport copy implementation checkpoint
 
 The pinned Ghostty UIKit wrapper requires `onTextSelectionRequest` for long-press selection. MoshDeck now handles that request with a read-only native text selection sheet and the wrapper-provided UTF-16 anchor. The snapshot covers the viewport, not all scrollback. It stays in memory, is discarded on dismissal, inactivity or explicit lock, and is concealed while inactive or locked. Remote OSC clipboard access remains denied. Physical long-press, selection, Copy, Unicode round-trip and privacy-cover acceptance are still NOT TESTED.
+
+## Composer persistence checkpoint
+
+Composer dismissal now saves the profile/draft through the existing device-only Keychain path, in addition to connection, lock and inactivity saves. Clear draft requires confirmation and saves the empty value immediately. The composer sheet explicitly conceals its contents on inactivity as well as app lock. Device validation of dismiss/relaunch, clear/relaunch and app-switcher concealment remains pending; abrupt process termination before a save is not guaranteed to preserve the latest edits.
