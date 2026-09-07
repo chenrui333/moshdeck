@@ -72,3 +72,23 @@ Visible error:
 ```
 
 Send structural results, not terminal transcripts or credentials. The engineer can correlate sanitized attempt timelines and Mac tmux metadata. Broader real-app and agent tests remain in [terminal compatibility](terminal-compatibility.md).
+
+## 6. Disposable CLI and coding-agent acceptance
+
+After completing the current session's timed recovery tests, prepare a separate workspace on the Mac:
+
+```sh
+python3 Spike/scripts/prepare-terminal-acceptance.py
+```
+
+The helper creates a new temporary Git repository, makes a DCO-signed baseline commit, and runs three standard-library Python tests. It prints the workspace path. It does not start an agent, connect remotely, or alter existing tmux sessions. Assign the printed path to `WORKSPACE`, then explicitly create a separate session when ready:
+
+```sh
+tmux new-session -s moshdeck-acceptance -c "$WORKSPACE"
+```
+
+Do not replace the original recovery-test session. In MoshDeck, connect an attach-only profile to `moshdeck-acceptance`. Begin with `echo $$`, `cat sample.txt`, `less sample.txt`, `vim sample.txt`, `git log`, and `python3 -m unittest -v`. Check scrolling, resize, Esc, arrows, Tab and clean exit separately; merely running the commands is not a visual PASS. Avoid live cluster/cloud commands when checking kubectl/Terraform; client help/version output can establish basic rendering only.
+
+For the agent workload, start Codex in this workspace and ask it to carry out `TASK.md`. Use the phone for a normal prompt, a longer composer prompt and streaming-output inspection. Exercise Ctrl-C during active work and then deliberately resume. Record the agent PID separately from the shell PID, background/recover, and verify that same process before returning to an actual iTerm2 attachment. Repeat the inverse handoff in a separate observation. Agent APIs are not involved, and no private prompts/output should be recorded.
+
+This setup is preparation, not physical acceptance. Record missing tools/hardware and untested interactions explicitly. A passing Python baseline does not pass any phone terminal or agent row.

@@ -55,3 +55,9 @@ The pinned UIKit wrapper's `resignFirstResponder` changes focus but does not res
 `PlainTextTerminalView` now invokes the wrapper's public `resetStickyModifiers()` before delegating focus resignation. Existing keyboard dismissal, scene inactivity, explicit Lock and transport cleanup all use this path. This preserves normal one-shot/locked modifier behavior while editing, but clears it when leaving the terminal input session. No upstream fork or alternate key encoder was introduced.
 
 After the fix, simulator parser/input coverage passed in 7.406 seconds, and actual simulator keyboard dismissal/expansion passed in 13.487 seconds. Physical modifier-bar, hardware keyboard and reconnect acceptance remain pending; the phone build has not been replaced for this check.
+
+## Disposable workspace preparation — 2026-09-07
+
+`Spike/scripts/prepare-terminal-acceptance.py` was executed on the Mac and produced an isolated temporary Git repository with a DCO-signed baseline commit, Unicode/scrolling sample, coding task and three passing standard-library Python tests. No tmux session or coding agent was started; the existing phone continuity session was preserved. The [phone steps](phone-test-steps.md) describe the later explicit attachment and agent workflow.
+
+A PATH availability check found tmux, vim, top, Git, OpenSSH, kubectl, Terraform, Codex and Claude. Neither nvim nor htop was on PATH. Availability is not terminal acceptance, and this check does not establish tool versions or account/authentication readiness. All corresponding unrun physical matrix rows remain unchanged.
