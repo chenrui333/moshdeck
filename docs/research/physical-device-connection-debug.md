@@ -157,7 +157,7 @@ Input hardening is in 8ea2a12: a per-attempt pipe cannot rebind after stop, disc
 | Cellular → Wi-Fi | NOT TESTED | Pending | Pending | Pending | Pending |
 | Force termination/relaunch | PARTIAL: profile survived build replacement | Cold launch auth; manual Connect | Spike same PID | See sample ledger | Draft/explicit kill test pending |
 | Mac unavailable/reachable | NOT TESTED | Actionable failure/retry required | Pending | Pending | Pending |
-| Short absence, new policy | NOT TESTED | Automatic reconnect without auth expected | Pending | Pending | Pending |
+| Short absence, new policy | PASS for recovery, slow reachability noted: 75.27 s absence | Automatic retries/foreground recovery; no new app unlock | PID 89665 | 38.41 s from first foreground; final attempt 5.57 s | Owner reports display much better; copy not separately confirmed |
 | Explicit Lock, new policy | NOT TESTED | Close/hide, authenticate, restore desire | Pending | Pending | Composer privacy pending |
 
 Real CLI compatibility and performance now have separate [terminal](terminal-compatibility.md) and [performance](performance.md) records. No unrun row is filled from a similar test.
@@ -203,3 +203,9 @@ Basic composer use is owner-confirmed. The individual 1/10/50 KB, dictation, cop
 ## View-identity fix deployment — September 7, 01:15 EDT
 
 The successful build containing `5582b2a` was installed and CoreDevice launched the app successfully. This supersedes the earlier not-installed note. Requested regression: connect, background for 30 seconds, return, exercise input and long-press Copy, and distinguish transient redraw from persistent corruption. Physical regression results are pending; the earlier screen-lock/composer pass was on the previous build.
+
+## View-identity physical recovery result — September 7, 01:19 EDT
+
+The owner reported recovery was “much better” after installing the view-identity fix. Diagnostics show inactivity from 1788758167.960838 to 1788758243.231370 (75.270532 seconds), TCP shutdown correctly classified retryable, automatic foreground/retry attempts, and no additional app authentication. Several opening-transport timeouts preceded successful foreground-resume attempt `2B6B4958-F9FC-4D09-8AE4-53685C908992`. Output arrived 38.409987 seconds after the first foreground event, or 5.572399 seconds after the successful attempt began. Mac metadata again confirmed PID `89665`, pane `%0`.
+
+Record automatic short-absence recovery and subjective display improvement as passed for this observed run, with slow recovery as an unresolved reliability/performance concern. The actual network-restoration time and route were not measured; the host was also compiling the isolated Ghostty source build. Do not call this a controlled 30-second background benchmark or attribute timeout causes without further evidence. Long-press Copy was requested but not independently confirmed by the owner's general improvement report.

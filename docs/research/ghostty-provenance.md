@@ -49,7 +49,7 @@ The source build logs record actual applied versus skipped variants. This is an 
 
 ## Current empirical result
 
-The isolated exact revisions were checked out, wrapper license-resource check passed, dependencies fetched, and patches applied. The first arm64 iOS build failed at the Metal shader compiler because Xcode's optional Metal Toolchain was missing. There were no other reported compiler failures in that run. The supported Apple component download was started; retry awaits its completion. No self-built XCFramework or app using it has passed yet.
+The isolated exact revisions were checked out, wrapper license-resource check passed, dependencies fetched, and patches applied. The first arm64 iOS build failed at the Metal shader compiler because Xcode's optional Metal Toolchain was missing. There were no other reported compiler failures in that run. The Apple Metal Toolchain 17F109 subsequently installed successfully, verified by xcodebuild component status. The same isolated source build was restarted and is compiling the arm64 iPhone target. No self-built XCFramework or app using it has passed yet.
 
 The wrapper license check confirms its tracked-resource policy, not all native static-library licenses. Original MIT wrapper/core notices, the MIT shell-integration rewrites and vendored bash-preexec notice must accompany distribution as applicable. Complete native/font/transitive notices and link/resource audit remain pending; see [license review](licenses.md).
 
