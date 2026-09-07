@@ -1,9 +1,14 @@
 # MoshDeck
 
-A research-stage personal iPhone terminal for controlling an existing development workspace on an awake Mac.
+Raw remote control for your development terminal from iPhone.
 
-The proposed starting point is a native terminal frontend, ordinary SSH over the official Tailscale VPN, and tmux for Mac/iPhone session continuity. Mosh is not an initial requirement. No custom backend or agent-specific protocol is planned.
+Status: daily-use MVP implementation. The physical SSH/tmux feasibility spike works; the full reliability, terminal and real-agent acceptance matrix is still in progress.
 
+The accepted architecture uses GhosttyTerminal, ordinary SSH over the official Tailscale VPN, and tmux for Mac/iPhone session continuity. Mosh is not an initial requirement. No custom backend or agent-specific protocol is planned.
+
+- [Daily-use MVP and prerequisites](docs/mvp.md)
+- [Terminal compatibility](docs/research/terminal-compatibility.md)
+- [Performance observations](docs/research/performance.md)
 - [Product direction](docs/product-direction.md)
 - [Architecture and decisions](docs/architecture.md)
 - [libghostty investigation](docs/research/libghostty.md)
@@ -19,4 +24,4 @@ The proposed starting point is a native terminal frontend, ordinary SSH over the
 - [UX debugging handoff](docs/research/ux-debug-handoff.md)
 - [Actual results and open gates](docs/research/spike-results.md)
 
-The [minimal spike](Spike/README.md) has basic physical-iPhone frontend and local OpenSSH/tmux test evidence. Full tailnet/mobile workflow validation is still pending. Research is not device validation. See the results document before relying on any claimed capability.
+The [development app](Spike/README.md) has physical-iPhone SSH/tmux, command input and automatic recovery evidence. Longer lock/outage, broad terminal application and Codex dogfood tests remain acceptance gates; see the current matrices before relying on a specific capability.

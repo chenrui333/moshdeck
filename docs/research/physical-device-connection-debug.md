@@ -137,3 +137,27 @@ Latest owner report: commands worked, app locked, unlocking showed the previous 
 - The app recorded `app lock: grace expired` at 1788753889.335281, then unlock request and success. Attempt `230E3823-BFF8-445F-A763-92A784F3F96E` records automatic foreground resume and reached tmux output in 2.607489 seconds from attempt start. Mac metadata still shows pane `%0` and original shell PID 89665.
 
 These traces resolve automatic recovery for the observed background/foreground and post-authentication paths. Manual first Connect after cold launch remains expected. The user's lock/unlock report is successful; the captured lock reason is timer expiry, not an explicit Lock button event, so button invocation is not independently verified by this trace. Five minutes continuously screen-locked, twenty-minute lock and full outage remain separate unrun scenarios. No terminal transcript was collected.
+
+## Daily-use implementation checkpoint — September 7
+
+The accepted spike is preserved in local DCO-signed commits 44a114c (core), 938b1cc (phone harness) and d317f1d (research). Baseline core tests passed (15 plus one opt-in skip); the physical-device-targeted app build passed. This did not rerun the physical acceptance matrix.
+
+Commit 8bf817b implements the new lock policy: authenticated foreground use has no expiry; first inactivity starts five minutes, background preserves that deadline, and foreground return checks expiry before restoring access. A six-test deterministic lock suite was added, including boundary/long-suspension cases. Core total at that checkpoint: 21 passed and one opt-in skip. The build installed, but launch was rejected by CoreDevice because the phone was locked. New-policy physical acceptance is pending; the preserved spike's active timer-expiry trace cannot prove it.
+
+Input hardening is in 8ea2a12: a per-attempt pipe cannot rebind after stop, discards queued/offline callbacks, and resigns the terminal first responder during closure. Suspended fake-writer tests verify old queued data does not reach a replacement connection. Core total: 24 passed and one opt-in skip; the app build including responder resignation passed. Real-device regression remains pending.
+
+| Required MVP scenario | Result | Reconnect / Face ID | Same process | Output timing | Draft / prior screen / error |
+| --- | --- | --- | --- | --- | --- |
+| Foreground >5 min, new policy | NOT TESTED on device | Must remain unlocked/connected | Pending | Pending | Pending |
+| Screen lock >=5 min | NOT TESTED | Auth expected after absence grace | Pending | Pending | Pending |
+| Screen lock >=20 min | NOT TESTED | Auth expected | Pending | Pending | Pending |
+| Screen lock >=60 min | NOT TESTED | Auth expected | Pending | Pending | Pending |
+| Full outage/airplane mode | NOT TESTED | Classify recovery independently | Pending | Pending | Pending |
+| Wi-Fi → cellular | PARTIAL: owner-reported spike success | No repeat auth in sampled interval; current policy retest pending | Spike same PID | Mixed route, not measured transition latency | Not individually checked |
+| Cellular → Wi-Fi | NOT TESTED | Pending | Pending | Pending | Pending |
+| Force termination/relaunch | PARTIAL: profile survived build replacement | Cold launch auth; manual Connect | Spike same PID | See sample ledger | Draft/explicit kill test pending |
+| Mac unavailable/reachable | NOT TESTED | Actionable failure/retry required | Pending | Pending | Pending |
+| Short absence, new policy | NOT TESTED | Automatic reconnect without auth expected | Pending | Pending | Pending |
+| Explicit Lock, new policy | NOT TESTED | Close/hide, authenticate, restore desire | Pending | Pending | Composer privacy pending |
+
+Real CLI compatibility and performance now have separate [terminal](terminal-compatibility.md) and [performance](performance.md) records. No unrun row is filled from a similar test.
