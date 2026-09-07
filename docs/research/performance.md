@@ -49,3 +49,7 @@ No new transport or renderer is justified by these limited observations. Investi
 | 2B6B4958 | Successful attempt after Airplane Mode, then 5G | 5.572399 s |
 
 Across these four mixed observations: min 2.044 s, median 2.369 s, max 5.572 s. They span builds and network conditions and are not a controlled comparison. The outage-to-5G sequence took 38.409987 seconds from its first foreground event to output, including retries while the Mac was unreachable; the exact restoration time is unknown. Do not label that interval app reconnect overhead. The Mac was also running an isolated dependency build during the last observation. The owner reported the recovery display was much better with the view-identity fix; this is subjective visual acceptance, not frame-timing evidence.
+
+## Release size baseline — 2026-09-07
+
+Unsigned arm64 Release build at `285bdf6`, using the pinned released Ghostty artifact: **18,165,878 bytes** for regular files in the app bundle; **17,713,216 bytes** for the main executable. This is local uncompressed build size, not App Store download size, installed-device storage or peak memory. The build was not executed on the phone. [Release audit data](release-link-audit.json) records hashes and build scope. No typing, CPU, memory, battery or thermal acceptance is inferred from these figures.

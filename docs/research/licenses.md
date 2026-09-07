@@ -82,3 +82,9 @@ Two package-archive omissions required looking at the immutable upstream revisio
 - uucode's `LICENSE.md` references `licenses/LICENSE_Bjoern_Hoehrmann` and `licenses/LICENSE_unicode`, but the cached archive omits those files. They were recovered from the declared upstream revision `2826a37a4562284fdacd8fa029d49509cc9bffcd` and retained alongside the MIT notice.
 
 The two stb headers' complete MIT alternatives were copied directly from the pinned Ghostty source. The Nerd Fonts archive's top-level MIT notice is included, but individual symbol-source license attribution remains a separate open item. Runtime/toolchain, shell resources, final Release linkage and applicable copyleft distribution obligations still require closure.
+
+## Release linkage checkpoint — 2026-09-07
+
+An unsigned arm64 Release build at `285bdf6` completed with `LD_GENERATE_MAP_FILE=YES`. [release-link-audit.json](release-link-audit.json) records artifact/map hashes, sizes and bounded symbol-name observations. The live-symbol section (excluding dead-stripped entries) contains libintl, Wuffs, simdutf, Highway, Oniguruma and libxev names. `_libintl_bindtextdomain` is also a defined symbol in the final executable. libintl therefore remains a Release distribution concern, not merely a Debug artifact finding.
+
+No BoringSSL object references were found in that app link map. No visible live symbol-name matches were found for several other source dependencies, including z2d, uucode and vaxis. These negative substring searches do not establish exclusion: optimized/inlined code and generated tables may not retain the source library's name. Source-import and archive inventories must remain distinct from this narrower final-symbol evidence. The raw map is retained locally, not committed, because it includes machine-specific build paths and embedded binary strings. No phone installation or distribution occurred.

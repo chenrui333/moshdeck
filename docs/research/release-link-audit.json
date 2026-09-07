@@ -1,0 +1,31 @@
+{
+  "source_commit": "285bdf6ffaf2b4c84f3435c6e1927cea6f5c2368",
+  "configuration": "Release",
+  "architecture": "arm64",
+  "signing": "disabled; not installed or distributed",
+  "app_regular_file_bytes": 18165878,
+  "executable_bytes": 17713216,
+  "executable_sha256": "c0997e8646429da3ddf3a0807ffff4d28b3df81427635971039db404cd7aa0d2",
+  "link_map_sha256": "a69e627acaa51f6b3c218e4989ed1e0e3718e355285778321c5cf8793fa2e63b",
+  "live_symbol_substring_counts": {
+    "libintl": 10,
+    "z2d": 0,
+    "uucode": 0,
+    "xev": 3,
+    "vaxis": 0,
+    "wuffs": 383,
+    "stbi": 0,
+    "FT_": 0,
+    "png_": 46,
+    "simdutf": 126,
+    "hwy": 12,
+    "onig_": 112,
+    "CCryptoBoringSSL": 0
+  },
+  "boringssl_object_references": 0,
+  "limitations": [
+    "Symbol substring counts are evidence of visible names, not a complete SBOM or proof of absence.",
+    "App bytes are uncompressed local build size, not App Store download size or device storage use.",
+    "Unsigned Release artifact has not been physically executed."
+  ]
+}
