@@ -148,7 +148,7 @@ Input hardening is in 8ea2a12: a per-attempt pipe cannot rebind after stop, disc
 
 | Required MVP scenario | Result | Reconnect / Face ID | Same process | Output timing | Draft / prior screen / error |
 | --- | --- | --- | --- | --- | --- |
-| Foreground >5 min, new policy | PARTIAL: owner recalls testing successfully; exact uninterrupted duration unconfirmed | No reported auth interruption | Same shell in adjacent observations | Not timed | Do not substitute lock recovery |
+| Foreground >5 min, new policy | PASS for no unlock expiry: 28m 1.31s connected-to-inactive trace, plus owner report | No intervening relock/auth/disconnect event | PID 89665 remains alive in subsequent Mac check | 1,681.31 s interval | Continuous interaction/typing latency not measured; not a screen-lock test |
 | Screen lock >=5 min | PASS: owner confirmation plus 416.27-second background trace | Authentication then automatic foreground reconnect | PID 89665, pane %0 | 2.495 s from reconnect attempt | Composer separately owner-confirmed; exact draft/screen assertions not instrumented |
 | Screen lock >=20 min | NOT TESTED | Auth expected | Pending | Pending | Pending |
 | Screen lock >=60 min | NOT TESTED | Auth expected | Pending | Pending | Pending |
@@ -213,3 +213,12 @@ Record automatic short-absence recovery and subjective display improvement as pa
 ## Clarification: Airplane Mode to 5G
 
 The owner clarified that the improved-recovery test used Airplane Mode and then switched to 5G. This resolves the earlier unknown test conditions for the `2B6B4958` recovery sequence. Record successful full-outage-to-5G recovery, not an isolated unchanged-Wi-Fi background test. The 38.409987 seconds begins at first foreground activation and includes an unknown amount of continued unreachability/network transition. It is not app-only recovery latency or a measured post-restoration SLA. The 5.572399-second successful SSH attempt is separately observable. Offline raw-input rejection, exact outage duration, clipboard behavior and draft retention were not separately confirmed by this result.
+
+
+## Extended foreground evidence — September 7, 04:39 EDT inspection
+
+Retrieved sanitized device diagnostics still end with the background event at epoch 1788760077.831675. They do not contain a subsequent 20- or 60-minute lock recovery, and those rows remain untested.
+
+The retained earlier attempt `2657037A-0C95-4F60-9250-721A60BC9319` reached interactive output at 1788758375.847423. Its next recorded lifecycle event is `scene inactive` at 1788760057.160598: 1,681.313175 seconds (28 minutes 1.31 seconds). There is no intervening app-unlock, relock, or disconnect event in that attempt timeline. Together with the owner's earlier foreground-check report, this supports the foreground-no-expiry requirement. It does not measure continuous typing, responsiveness throughout the interval, or a locked-phone duration. Independent Mac metadata at inspection still showed pane `%0`, shell PID `89665`, 37×25.
+
+The following foreground-resume attempt `69866380` authenticated, allocated its PTY and received remote-command acceptance, but the channel closed before interactive output and the app returned to background. Do not count that attempt as a successful terminal recovery. Its close/background ordering is recorded without asserting a network root cause.
