@@ -1,0 +1,77 @@
+{
+  "scope": "Top-level notices for every pinned app Swift package; excludes nested native and resource notices",
+  "files": [
+    {
+      "dependency": "libghostty-spm",
+      "revision": "733ae3b29d447b6707cbfc00879027a076dfd0eb",
+      "source": "LICENSE",
+      "sha256": "1f4b38df6a142e678a85d84c3a7ec4d1db328a556483241df714156134e81615"
+    },
+    {
+      "dependency": "msdisplaylink",
+      "revision": "87eb0af130744c8cbe2e31b6e1a5bcd659f1c220",
+      "source": "LICENSE",
+      "sha256": "5dffb6c45faaa71f6c393255b135145cc17f0b07e968a705ef58f9c68aeb112d"
+    },
+    {
+      "dependency": "swift-asn1",
+      "revision": "d9a5b37470adc940d22c3bcd5ca6953a516b727f",
+      "source": "LICENSE.txt",
+      "sha256": "8c6db340475136df3c1201d458fa5755698eace76e510471ecc9d857d6083dac"
+    },
+    {
+      "dependency": "swift-asn1",
+      "revision": "d9a5b37470adc940d22c3bcd5ca6953a516b727f",
+      "source": "NOTICE.txt",
+      "sha256": "11dd3b3b783e6ec26098dd38ebc962986ea109b85447e28e62867b83bd0f8c5b"
+    },
+    {
+      "dependency": "swift-atomics",
+      "revision": "0442cb5a3f98ab802acb777929fdb446bda11a34",
+      "source": "LICENSE.txt",
+      "sha256": "770af8291f708538d8ff885a0bbc4e045cd700531741c4f99528d435c14d7f55"
+    },
+    {
+      "dependency": "swift-collections",
+      "revision": "a0cb0954ecb21e4e31b0070e6ed5674e8556685a",
+      "source": "LICENSE.txt",
+      "sha256": "770af8291f708538d8ff885a0bbc4e045cd700531741c4f99528d435c14d7f55"
+    },
+    {
+      "dependency": "swift-crypto",
+      "revision": "da9d28d69ebe3894b18376c8f2395c2f37b8448f",
+      "source": "LICENSE.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "dependency": "swift-crypto",
+      "revision": "da9d28d69ebe3894b18376c8f2395c2f37b8448f",
+      "source": "NOTICE.txt",
+      "sha256": "b3ddc2ae068e76b3beb71be03c0400f90090f9469aa491bf7b1ac42320af37b8"
+    },
+    {
+      "dependency": "swift-nio",
+      "revision": "a931f2c1de8dd49381ce3bf2e279d033f68d8865",
+      "source": "LICENSE.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "dependency": "swift-nio",
+      "revision": "a931f2c1de8dd49381ce3bf2e279d033f68d8865",
+      "source": "NOTICE.txt",
+      "sha256": "d25ed2452b3476c342082d11e4e8bf5459174d2836124f842b499850bcebc50e"
+    },
+    {
+      "dependency": "swift-nio-ssh",
+      "revision": "3ec281496f28a3b6581afd946b759e2642f5cd8d",
+      "source": "LICENSE.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "dependency": "swift-system",
+      "revision": "869129b7bf4ecc57b97d0193ad29690ca2134750",
+      "source": "LICENSE.txt",
+      "sha256": "2245a990b635558be210fb3eb4f8a6f7a49aebc0fefbf5859146a65ddc7ddcf3"
+    }
+  ]
+}

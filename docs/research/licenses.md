@@ -25,3 +25,11 @@ Observed 2026-09-06. This is an engineering selection review, not a complete dis
 | [Blink](https://github.com/blinksh/blink/blob/raw/LICENSE) / [Remux](https://github.com/h3nock/remux/blob/main/LICENSE) | App references | GPL-3.0 / MIT | No Blink code copying into permissive app; Remux reuse retains notice | Inspect dependencies independently | References, not selected app forks |
 
 Before distribution, produce notices from `Package.resolved` plus the XCFramework build manifest and link map, verify no unexpected telemetry/private symbols/resources, and complete encryption/export metadata. Avoid adding a blanket `ITSAppUsesNonExemptEncryption = false` without classifying the actual shipped SSH crypto. Current [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/) also constrain public APIs and background-mode use; working around suspension using fake audio/location is not part of this design.
+
+## Bundled Swift package notices — 2026-09-07
+
+`Spike/App/Notices/SwiftPackages.txt` preserves the top-level license and notice text from all nine packages in the app's `Package.resolved` (12 source files). Each checkout HEAD was verified against its resolved revision before collecting text with `git show REVISION:PATH`. The source-file SHA-256 values and revisions are recorded in [swift-package-notices.json](swift-package-notices.json). The app's synchronized resources group includes this notice file. JetBrains Mono's OFL is bundled separately.
+
+To refresh, resolve the committed app pins, verify checkout revisions, enumerate each revision's top-level `LICENSE`, `NOTICE`, and `COPYING` files using `git ls-tree`, and read those files using `git show`. Preserve their text and update the source hashes in the manifest; do not substitute licenses from a newer default branch. Build the app and verify the resulting resource byte-for-byte.
+
+This closes the top-level Swift-package notice inventory only. Nested C/C++ dependencies, Ghostty's statically linked native libraries, symbol fonts and shell resources still require their own complete inventory. The manifest does not establish that every target of every resolved package is linked into the final app, and it does not constitute distribution clearance.
