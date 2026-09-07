@@ -31,12 +31,12 @@ Ed25519 identity, supplied known host key, macOS OpenSSH, hostname/IP over Tails
 | Milestone | Current state | Acceptance |
 | --- | --- | --- |
 | Preserve spike | Complete: three scoped DCO-signed local commits; baseline tests/build passed | Recoverable Git snapshot, no push |
-| Foreground/background app lock | Code and deterministic tests implemented; device validation pending | No active timeout; short/long absence and explicit Lock correct |
-| Network reliability | Spike recovery evidence retained; full MVP matrix pending | Same session after outage, both network directions, process kill and 5/20/60-minute locks |
+| Foreground/background app lock | Code/tests complete; 6m56s physical lock recovery passed, foreground duration owner-reported | No active timeout; short/long absence and explicit Lock correct |
+| Network reliability | Airplane Mode → 5G automatic recovery and timed lock passed; remaining matrix pending | Same session after outage, both network directions, process kill and 5/20/60-minute locks |
 | Terminal fidelity | Synthetic parser/input and shell/tmux evidence; broad app checks pending | Actual CLI and Codex control without major blockers |
 | Input UX | Spike composer/keys/dismissal retained; further hardening pending | Modifiers, large paste, Unicode and no offline replay |
 | Performance | Individual spike connection samples only | Several current-device samples and meaningful resource observation |
-| Security/provenance | Key/host/privacy controls retained; artifact reproduction pending | No known beta-blocking defect; reproducible dependency evidence |
+| Security/provenance | Source artifact, isolated iPhone build and two simulator checks passed; full notices/security audit and physical artifact qualification pending | No known beta-blocking defect; reproducible dependency evidence |
 | Product cleanup | Engineering harness still visible | Minimal profiles, terminal, composer, details and lock |
 | Codex dogfood | Not performed | Meaningful phone-only work interval and actual iTerm2 handoff |
 

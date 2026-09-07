@@ -53,7 +53,21 @@ The isolated exact revisions were checked out, wrapper license-resource check pa
 
 The iOS-only archive is 22,915,836 bytes (22.9 MB decimal), SHA-256 `3d4620a7fa8441aae6a5f6f149e605692bcd2dbd265d42e558833417774812c4`. The uncompressed iPhone static archive is 19,452,928 bytes and combined simulator archive 39,136,760 bytes. These are dependency artifact sizes, not installed-app, App Store or incremental executable sizes. This was one successful source reproduction, not a repeat-build determinism proof.
 
-An isolated app copy was prepared with the rebuilt wrapper's Package.local.swift and local BinaryTarget, MSDisplayLink revision fixed to the app's existing `87eb0af130744c8cbe2e31b6e1a5bcd659f1c220`, and the Xcode package reference changed to that local package only in the isolated copy. Its unsigned device-target consumer build is currently resolving packages. No app using the local artifact has passed build or physical acceptance yet. The main repository dependency pin and installed phone artifact remain unchanged.
+An isolated app copy used the rebuilt wrapper's Package.local.swift and local BinaryTarget, with the Xcode package reference changed only in that copy. Initial package refresh encountered a GitHub SSH fetch failure; that resolver was deliberately stopped. An independent copy of the existing package cache was then verified against every tracked checkout revision. The local wrapper used exact MSDisplayLink 2.2.0 with its existing resolved revision `87eb0af130744c8cbe2e31b6e1a5bcd659f1c220`. The retry used `-disableAutomaticPackageResolution -skipPackageUpdates`; all nine remote resolved revisions matched tracked pins.
+
+The unsigned generic-iPhone consumer build passed. Its build log explicitly identifies the local Ghostty package and processes the locally rebuilt BinaryTarget XCFramework. Two UI tests then passed on the iPhone 17 Pro / iOS 26.5 simulator: `testRealTerminalParserAndInputPaths` (7.992 s) and `testTerminalKeyboardDismissalAndExpansion` (56.757 s). These durations are test execution time, not terminal latency. No physical phone has run this self-built artifact yet. The main repository dependency pin and installed phone artifact remain unchanged.
+
+To reproduce the consumer check, make an isolated copy of the app and wrapper sources, copy the rebuilt BinaryTarget, use Package.local.swift as the local wrapper manifest, and reference it through XCLocalSwiftPackageReference in the copied project. Preserve all resolved dependency revisions. With a separately copied and revision-verified package cache, use the following build settings on the copied project:
+
+```sh
+xcodebuild build -project "$consumer_project" -scheme MoshDeckSpike \
+  -configuration Debug -destination 'generic/platform=iOS' \
+  -derivedDataPath "$consumer_derived_data" \
+  -clonedSourcePackagesDirPath "$verified_package_cache" \
+  -disableAutomaticPackageResolution -skipPackageUpdates CODE_SIGNING_ALLOWED=NO
+```
+
+The variables name disposable consumer/project/cache paths chosen by the engineer. Code signing is intentionally disabled for this compilation check; it is not an installation recipe. Runtime qualification of a replacement phone artifact still requires the physical acceptance matrix.
 
 The wrapper license check confirms its tracked-resource policy, not all native static-library licenses. Original MIT wrapper/core notices, the MIT shell-integration rewrites and vendored bash-preexec notice must accompany distribution as applicable. Complete native/font/transitive notices and link/resource audit remain pending; see [license review](licenses.md).
 
