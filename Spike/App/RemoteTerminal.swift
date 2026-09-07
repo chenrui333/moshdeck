@@ -104,7 +104,7 @@ final class RemoteTerminalModel: ObservableObject {
         case .connected: return "Connected"
         case .reconnecting(let index): return "Reconnecting (\(index + 1))…"
         case .disconnected: return "Disconnected — remote tmux work continues"
-        case .failed(let failure): return "Failed at \(failure.stage.rawValue): \(failure.message)"
+        case .failed(let failure): return "\(failure.title)\n\(failure.message)"
         }
     }
 

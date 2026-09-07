@@ -20,6 +20,18 @@ struct DiagnosticsTests {
         #expect(lifecycle.firstFailure == failure)
     }
 
+    @Test(arguments: ConnectionStage.allCases)
+    func primaryFailureMessageDoesNotExposeInternalCodes(stage: ConnectionStage) {
+        let failure = ConnectionFailure(stage: stage, code: "libraryInternalCode=987654")
+        #expect(!failure.title.isEmpty)
+        #expect(!failure.message.contains("987654"))
+        var lifecycle = ConnectionLifecycle()
+        let id = lifecycle.begin()
+        lifecycle.fail(id, failure)
+        #expect(lifecycle.diagnostics.contains("libraryInternalCode=987654"))
+        #expect(lifecycle.firstFailure == failure)
+    }
+
     @Test func diagnosticHistoryIsBounded() {
         var lifecycle = ConnectionLifecycle()
         _ = lifecycle.begin()

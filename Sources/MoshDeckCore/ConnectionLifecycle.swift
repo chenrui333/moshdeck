@@ -187,6 +187,21 @@ extension ConnectionStage {
 }
 
 extension ConnectionFailure {
+    public var title: String {
+        switch stage {
+        case .preparation: "Check connection settings"
+        case .terminal: "Terminal unavailable"
+        case .openingTransport: "Cannot reach the Mac"
+        case .negotiatingSSH: "SSH connection failed"
+        case .hostVerification: "Mac identity could not be verified"
+        case .authentication: "SSH authentication failed"
+        case .sessionChannel, .pty: "Terminal startup failed"
+        case .shell: "Shell startup failed"
+        case .tmux: "tmux attachment failed"
+        case .awaitingOutput: "Terminal did not respond"
+        }
+    }
+
     public var message: String {
         if code == "missingHostUserPortOrHostKey" { return "Enter host, username, port and verified host public key." }
         if code == "hostKeyMismatch" {
@@ -204,6 +219,27 @@ extension ConnectionFailure {
         if stage == .awaitingOutput {
             return "The remote command was accepted, but no terminal output arrived before the deadline."
         }
-        return "\(stage.title) failed (\(code)). Copy Diagnostics for the full attempt timeline."
+        switch stage {
+        case .preparation:
+            return "Check the saved hostname, port, username and verified host key."
+        case .terminal:
+            return "The terminal could not start or keep up with input. Reconnect and inspect the session before typing again."
+        case .openingTransport:
+            return "Check that both devices are online in Tailscale, the Mac is awake, and Remote Login is enabled."
+        case .negotiatingSSH:
+            return "The SSH handshake did not finish. Check Mac availability and copy diagnostics for the failure stage."
+        case .hostVerification:
+            return "Verify the saved host public key against the Mac before retrying."
+        case .authentication:
+            return "Check the Mac username and that this device's public key is authorized for that user."
+        case .sessionChannel, .pty:
+            return "SSH could not open an interactive terminal. Check diagnostics and the Mac's SSH configuration."
+        case .shell:
+            return "Check that the Mac user's shell can start through SSH."
+        case .tmux:
+            return "Check the tmux executable and that the selected session still exists. Recovery does not create a replacement session."
+        case .awaitingOutput:
+            return "The remote session did not produce output. Check the selected session on the Mac."
+        }
     }
 }
