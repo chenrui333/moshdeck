@@ -1,15 +1,15 @@
 # MoshDeck executive review handoff
 
-Checkpoint: September 7, 2026. Review the current engineering spike, not a shipped product. This report separates implementation, empirical results and remaining acceptance work.
+Checkpoint: September 7, 2026, daily-use implementation phase through `e5899e1`. The accepted architecture and physical spike are preserved in Git. Daily-use MVP acceptance is not complete. This report separates installed-device evidence from newer built/tested changes.
 
 ## Review request
 
 Act as a principal iOS/terminal/networking engineer and product reviewer. Challenge the design using the evidence below. Prioritize concrete correctness and mobile usability problems. Do not recommend services, frameworks or dashboards without a demonstrated workflow need.
 
 Return:
-1. Overall verdict: continue this architecture, change a specific component, or stop and use an existing app.
+1. Assess progress toward daily use within the accepted architecture; propose a component change only if new evidence requires it.
 2. Up to five findings, ranked by severity, distinguishing observed defects from hypotheses.
-3. Recommended app-lock and reconnect policy.
+3. Defects or acceptance gaps in the implemented foreground-unlimited/background-grace and reconnect policies.
 4. The smallest daily-use MVP and explicit exclusions.
 5. The next three engineering tasks, each with an acceptance test.
 6. Additional evidence needed before your conclusions can be trusted.
@@ -80,7 +80,7 @@ Not implemented as a finished product: host management polish, session picker, m
 
 ## Lifecycle and diagnostics
 
-App lock and SSH connection are separate models. Cold launch starts locked. Explicit device-owner authentication grants a fixed five-minute window. Connect/retry/reconnect do not call Face ID during that window. Explicit Lock or expiry closes SSH and hides the terminal. **Expiry currently applies even while actively using the foreground terminal.** This is a known policy rough edge for review.
+App lock and SSH connection are separate models. Cold launch starts locked. Authenticated foreground use has no expiry. First inactivity starts a five-minute grace period; background does not extend it. Foreground entry checks the deadline before restoring access, including after suspension. Connect/retry/reconnect never invoke Face ID. Explicit Lock or expired background grace closes SSH and hides terminal/composer content. The foreground no-expiry behavior has a 28-minute trace; a separate 6m56s screen-lock/authentication/recovery test passed.
 
 Connection states: idle, starting(stage), connected, reconnecting, disconnected, cancelled, failed. Stages cover preparation, terminal initialization, grouped DNS/TCP opening, SSH negotiation, host verification, authentication, session channel, PTY, shell/tmux startup and awaiting output. DNS success is not independently observed.
 
@@ -105,12 +105,17 @@ Diagnostics contain stages, safe error categories, timestamps, attempt IDs and p
 | Cancel stalled until startup timeout | NIOSSH consumed channelInactive; observing parent closeFuture fixed reproduced test |
 | Diagnostic picker selected the wrong mode | Intent routing centralized and unit tested |
 | Keyboard concealed tabs | Persistent dismissal and expand/restore; physical test passed |
+| TCP shutdown classified permanent | Exact NIOSSH TCP-shutdown classification corrected; automatic outage-to-5G recovery observed |
+| Recovery reused an old platform view | Explicit terminal-state view identity; owner reported improved recovery display |
+| Sticky modifiers survived focus loss | Reproduced in real wrapper fixture; adapter resets modifiers on resignation; simulator pass, physical pending |
+| SSH test waited for obsolete failure wording | Stable accessibility connection state; simulator lock-state assertion passed |
+| Local OpenSSH tests hung during destruction | Sampled Foundation waitUntilExit stall; explicit fixture cleanup; three repeated runs left no fixture directories |
 
 The original silent Connect loop lacked a retained trace. Several fixes preceded success, so no exclusive historical root cause is claimed. The close-signal/cancellation defect was independently reproduced.
 
 ## Empirical evidence
 
-Physical device: iPhone 15 Pro Max, iOS 26.6. Xcode 26.6. Mac uses ordinary OpenSSH and a disposable tmux shell; no agent workload was started.
+Physical device: iPhone 15 Pro Max, iOS 26.6. Xcode 26.6. Mac uses ordinary OpenSSH and a disposable tmux shell; no agent workload was started. The first table retains historical spike observations; the current-policy rows below have separate evidence.
 
 | Check | Result and scope |
 | --- | --- |
@@ -127,26 +132,43 @@ Physical device: iPhone 15 Pro Max, iOS 26.6. Xcode 26.6. Mac uses ordinary Open
 
 Timing values are individual attempt-start-to-output samples, not p95 measurements, keystroke latency or general network guarantees. The local Mac concurrent client was a PTY, not an iTerm2 UI acceptance run.
 
-Latest core suite: 16 entries, 15 passed and one explicit opt-in skip. Separate actual-Mac tests passed auth-only, no-PTY echo, clean/normal shell and tmux with a temporary key removed afterward. Tests cover first failure, stale callbacks, cancellation, lock grace, host mismatch, intent routing, PTY resize, Ctrl-C and exact 1 MiB output. Latest installed build compiled successfully; formatting and whitespace checks passed. Earlier physical UI suites passed on their tested revisions; a full suite was not rerun merely for added metadata logging.
+Current implementation evidence:
+
+| Check | Result and scope |
+| --- | --- |
+| Foreground no-expiry | 28m 1.31s connected-to-inactive trace plus owner report; no intervening relock/disconnect |
+| Screen lock >=5 min | 6m56s measured background, required authentication, automatic reattach in 2.495s; same shell PID 89665 |
+| Full outage | Owner confirmed Airplane Mode then 5G; automatic recovery, no repeat auth, same PID |
+| Outage timing | 38.41s from first foreground, but restoration time unknown; successful attempt took 5.572s |
+| Composer | Owner confirmed basic use after recovery; individual large-size/copy/relaunch cases remain pending |
+| Current core suite | 32 reported tests, including one opt-in skip; passing full run in 4.270s |
+| Repeated local integration | Three further OpenSSH-suite passes, each with no newly orphaned fixture directories |
+| New modifier fix | Reproduced failure before fix; parser/input and keyboard dismissal/expansion simulator tests passed after fix |
+| Dependency reproduction | Core source artifact built; isolated iOS consumer built; two simulator checks passed; self-built artifact not installed |
+| Release build | Unsigned arm64 build passed; app regular files 18,165,878 bytes; not physical memory or App Store download size |
+
+The core suite includes host rejection, first failure, stale callbacks, cancellation, lock transitions, input generation isolation, missing tmux attach without replacement, PTY resize, Ctrl-C, exact 1 MiB output and 1/10/50 KB synthetic Unicode byte preservation. These local tests do not fill the phone matrix.
 
 ## Remaining risks and acceptance gaps
 
-1. Continuous 5/20/60-minute screen locks, full outage/airplane mode, reverse cellular-to-Wi-Fi transition and controlled cold-launch draft recovery.
-2. Broad real terminal application fidelity: vim/neovim/less/htop, coding-agent UIs, IME/CJK, hardware keyboard, VoiceOver, large prompt behavior and real output/interrupt stress.
-3. Device typing/render latency, memory/CPU/battery, sustained throughput and comparable existing-client baseline.
-4. Foreground five-minute relock usability, local scrollback discontinuity after reattach, and current spike-specific setup/diagnostic controls.
-5. Community Ghostty upgrade burden, complete artifact provenance/license distribution review and broader SSH interoperability.
+1. Separate 20/60-minute lock recovery, both controlled network directions, termination, Mac unavailable and explicit Lock under the current policy. Full-outage recovery passed, but offline-input/draft assertions need physical confirmation.
+2. Real CLI/agent fidelity, actual iTerm2 handoff, Unicode/IME/copy, hardware keyboard, VoiceOver, large composer prompts and sustained output/interrupt behavior.
+3. Device typing/render latency, memory/CPU/battery, sustained dogfood and an existing-client baseline where available.
+4. Engineering controls remain visible; one saved profile/identity model; viewport-only native copy and local scrollback replacement on reattach. Native Copy is not explicitly local-only.
+5. Distribution review: linked LGPL libintl in Release, MPL z2d source dependency, remaining glyph attribution and final source/relinking obligations. Many exact notices and source-reproduction records are now bundled; that is not blanket distribution clearance.
 
-No dedicated five-minute screen-lock pass is inferred from five-minute app-auth expiry. No coding-agent continuity pass is inferred from a shell session.
+No 20/60-minute pass is inferred from elapsed background time, and no coding-agent continuity pass is inferred from a shell session.
 
 ## Recommended next work and scope
 
-Keep the architecture and finish the reliability/terminal matrix before expanding product scope. Highest-value immediate test: a complete temporary network outage, then recovery to the same tmux process without offline input replay. Review lock policy before daily use; a fixed active-session timeout may be unnecessarily disruptive.
+Keep the architecture and finish the reliability/terminal matrix before expanding product scope. Highest-value immediate step: complete the pending long-lock phone recovery observation before replacing the installed build. Reopen, authenticate if prompted, observe automatic versus manual recovery, run `echo $$` (baseline 89665), and check draft retention. Then test the newer font/modifier build and continue the separate acceptance rows. A disposable CLI/coding workspace can be prepared with `Spike/scripts/prepare-terminal-acceptance.py`; its three baseline tests passed, but no agent was launched.
 
 Daily MVP: saved host, trusted key auth, correct terminal, usable mobile keys/composer, tmux attachment, clear lifecycle/recovery and privacy. Add session browsing or multiple terminals only after daily use demonstrates the need. Exclude backend/signup, companion, Mosh implementation, agent APIs, notifications, widgets, file browser and code editor for now.
 
 ## Repository and handoff state
 
-Repository: chenrui333/moshdeck. Branch main. HEAD 808927fb14ee358a92bdbab07808bf4e95fb6a0a. Research and spike work are uncommitted/unpushed; that HEAD alone does not contain this implementation. README.md is modified; package/config files, Sources, Tests, Spike and docs are untracked. Any eventual commits must have DCO sign-off and remain scoped. No push has been performed.
+Repository: chenrui333/moshdeck, branch `main`. Checkpoint before this documentation refresh: `e5899e11c0b7363b9dd9ff4e88bc08f0a9e09a25`, clean working tree. The successful spike and subsequent changes are preserved in scoped DCO-signed local commits; nothing was pushed. The installed phone code remains the `5582b2a` view-identity recovery fix. Newer code includes explicit JetBrains Mono selection (`f9c1f4b`), stable automation status (`2bfb810`) and sticky-modifier reset (`012e1b3`); these built but were not installed during the pending lock test.
+
+Do not reinstall or replace the current tmux shell merely to refresh metadata. No live build process remains from this checkpoint. Device tests require owner interaction; an unanswered question is not a passing result. See [MVP](../mvp.md), [phone steps](phone-test-steps.md), [terminal matrix](terminal-compatibility.md), and [performance](performance.md) for the remaining gates.
 
 Review entry points: [architecture](../architecture.md), [product](../product-direction.md), [security](../security.md), [lifecycle](connection-lifecycle.md), [physical evidence](physical-device-connection-debug.md), [spike plan](../spike-plan.md), and [licenses](licenses.md). Implementation: Sources/MoshDeckCore/ConnectionLifecycle.swift, SSHConnection.swift, SessionIntent.swift; Spike/App/RemoteTerminal.swift and MoshDeckSpikeApp.swift; Tests/MoshDeckCoreTests and Spike/UITests.

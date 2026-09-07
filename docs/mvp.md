@@ -31,12 +31,12 @@ Ed25519 identity, supplied known host key, macOS OpenSSH, hostname/IP over Tails
 | Milestone | Current state | Acceptance |
 | --- | --- | --- |
 | Preserve spike | Complete: three scoped DCO-signed local commits; baseline tests/build passed | Recoverable Git snapshot, no push |
-| Foreground/background app lock | Code/tests complete; 6m56s physical lock recovery passed, foreground duration owner-reported | No active timeout; short/long absence and explicit Lock correct |
+| Foreground/background app lock | Code/tests complete; 6m56s physical lock recovery and 28m foreground-no-expiry trace passed | No active timeout; short/long absence and explicit Lock correct |
 | Network reliability | Airplane Mode → 5G automatic recovery and timed lock passed; remaining matrix pending | Same session after outage, both network directions, process kill and 5/20/60-minute locks |
 | Terminal fidelity | Synthetic parser/input and shell/tmux evidence; broad app checks pending | Actual CLI and Codex control without major blockers |
 | Input UX | Spike composer/keys/dismissal retained; further hardening pending | Modifiers, large paste, Unicode and no offline replay |
-| Performance | Individual spike connection samples only | Several current-device samples and meaningful resource observation |
-| Security/provenance | Source artifact, isolated iPhone build and two simulator checks passed; full notices/security audit and physical artifact qualification pending | No known beta-blocking defect; reproducible dependency evidence |
+| Performance | Connection/recovery samples and unsigned Release size recorded; device resources pending | Several current-device samples and meaningful resource observation |
+| Security/provenance | Source reproduction and consumer/simulator checks passed; first-party audit and substantial notices recorded; copyleft/glyph review and physical artifact qualification pending | No known beta-blocking defect; reproducible dependency evidence |
 | Product cleanup | Engineering harness still visible | Minimal profiles, terminal, composer, details and lock |
 | Codex dogfood | Not performed | Meaningful phone-only work interval and actual iTerm2 handoff |
 
@@ -44,7 +44,7 @@ Ed25519 identity, supplied known host key, macOS OpenSSH, hostname/IP over Tails
 
 The installed/debug harness name and bundle identity remain stable to preserve the authorized Keychain identity. Current UI still exposes fixture/diagnostic controls. Only one saved-profile model exists so far; multiple profiles and identity selection are not yet complete. Local renderer scrollback is replaced on successful reattach; remote tmux history remains available through copy mode. Input delivered before an undetected network loss may have ambiguous delivery; it is never automatically resent on a new connection.
 
-Longer screen-lock, complete outage, actual iTerm2 UI, real Codex, broad full-screen/IME/hardware-keyboard and device-resource tests remain gates. A previous app-auth timer expiry is not a five-minute continuous screen-lock test. See [physical evidence](research/physical-device-connection-debug.md).
+Separate 20/60-minute screen locks, controlled network directions, process termination, outage input/draft assertions, actual iTerm2 UI, real Codex, broad full-screen/IME/hardware-keyboard and device-resource tests remain gates. A 6m56s screen-lock test and Airplane Mode-to-5G recovery passed; neither fills these other rows. See [physical evidence](research/physical-device-connection-debug.md).
 
 ## Deferred scope
 
