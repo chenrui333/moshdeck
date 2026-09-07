@@ -49,3 +49,13 @@ Evidence from the exact pinned core and built artifacts:
 The copied license SHA-256 is `20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95`. The signed iPhone Debug build passed and its bundled license matched the source byte-for-byte. The installed phone app was not replaced.
 
 Adding the license text does not close distribution compliance. Before distributing a beta or App Store build, resolve the applicable source/relinking requirements and distribution terms for this actual static-link arrangement. Do not inherit the build script's assertion that open source alone establishes compliance. The reproducible core build is useful evidence but is not a complete compliance determination. No architecture change or dependency removal has been made on this finding alone.
+
+## Additional native notices — 2026-09-07
+
+`Spike/App/Notices/NativeLibraries.txt` retains 11 source notice files for Ghostty core, FreeType, libpng, zlib, Oniguruma, Highway and Wuffs. [native-library-notices.json](native-library-notices.json) records source paths, source-file hashes, Zig package hashes and cached-archive SHA-256 values. These were collected from the pinned core revision and the dependency archives used by the successful local rebuild. FreeType's license introduction and FTL text are both included; this inventory uses the FTL path, not a claim that Ghostty's MIT license covers FreeType.
+
+Archive-member inspection supports these native dependencies: `ftbase.o`, `png.o`, `inflate.o`, Oniguruma regex/encoding objects, `libhighway_zcu.o`, and `wuffs-v0.4.o` are present in the rebuilt iOS arm64 archive. This is archive inclusion evidence; final Release dead stripping and component-level source attribution still need their own review.
+
+A concrete metadata discrepancy remains: `pkg/simdutf/build.zig.zon` declares version 5.2.8, while the vendored `pkg/simdutf/vendor/simdutf.h` defines `SIMDUTF_VERSION` as 9.0.0. `simdutf.o` is present in the archive. Do not generate a 5.2.8 notice/SBOM entry solely from the package version. Trace the actual vendored source and its embedded third-party notices before completing that component.
+
+The remaining inventory includes simdutf, stb, pure-Zig/runtime dependencies, symbol-font components and shell resources, plus toolchain/runtime licensing as actually linked. libintl is separately documented above. None of these partial notice additions closes the full distribution gate.
