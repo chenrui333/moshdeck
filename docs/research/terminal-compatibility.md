@@ -47,3 +47,11 @@ The isolated local OpenSSH integration test passed synthetic 1,024-, 10,240- and
 ## Owner composer check — September 7, 01:14 EDT
 
 The owner confirmed the composer check looked good on the installed recovery-fix build after screen-lock recovery. Record basic composer use as PASS (owner report). Do not infer separate passage of all size, clear/relaunch, clipboard, dictation, Unicode or process-termination cases from that short confirmation. Those detailed checks remain pending.
+
+## Sticky modifiers after focus loss — 2026-09-07
+
+The pinned UIKit wrapper's `resignFirstResponder` changes focus but does not reset its sticky Ctrl/Alt/Command state. A new synthetic check against the real platform view reproduced `FAIL: modifiers after focus loss` before the fix. The check arms Alt/Command and double-taps Ctrl, then resigns focus and checks for remaining active modifiers.
+
+`PlainTextTerminalView` now invokes the wrapper's public `resetStickyModifiers()` before delegating focus resignation. Existing keyboard dismissal, scene inactivity, explicit Lock and transport cleanup all use this path. This preserves normal one-shot/locked modifier behavior while editing, but clears it when leaving the terminal input session. No upstream fork or alternate key encoder was introduced.
+
+After the fix, simulator parser/input coverage passed in 7.406 seconds, and actual simulator keyboard dismissal/expansion passed in 13.487 seconds. Physical modifier-bar, hardware keyboard and reconnect acceptance remain pending; the phone build has not been replaced for this check.

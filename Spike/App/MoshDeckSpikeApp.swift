@@ -73,6 +73,13 @@ final class PlainTextTerminalView: TerminalView {
 
     required init?(coder: NSCoder) { nil }
 
+    @discardableResult
+    override func resignFirstResponder() -> Bool {
+        // Do not carry armed/locked modifiers into the next editing session.
+        resetStickyModifiers()
+        return super.resignFirstResponder()
+    }
+
     override func paste(_ sender: Any?) {
         if let text = UIPasteboard.general.string { _ = paste(text: text) }
     }
@@ -133,6 +140,20 @@ private final class HarnessModel: ObservableObject {
         try? await Task.sleep(for: .milliseconds(150))
         if capture.take() != Data([3]) { failures.append("Ctrl-C") }
 
+        if let view = terminal.attachedPlatformView {
+            // Exercise the actual wrapper state used by its accessory bar.
+            view.toggleStickyModifier(.ctrl)
+            view.toggleStickyModifier(.ctrl)  // Double tap: locked, not one-shot.
+            view.toggleStickyModifier(.alt)
+            view.toggleStickyModifier(.command)
+            _ = view.resignFirstResponder()
+            if view.hasActiveStickyModifiers { failures.append("modifiers after focus loss") }
+            // Keep later fixture input independent of a failed reset assertion.
+            view.resetStickyModifiers()
+        } else {
+            failures.append("modifier platform view")
+        }
+
         session.receive("\u{1b}[?2004h")
         session.waitForPendingOutput()
         _ = capture.take()
@@ -149,7 +170,7 @@ private final class HarnessModel: ObservableObject {
         session.receive("\r\nFixture checks complete.\r\n")
         result =
             failures.isEmpty
-            ? "PASS: parser, alternate screen, Ctrl-C, paste, Enter" : "FAIL: " + failures.joined(separator: ", ")
+            ? "PASS: parser, alternate screen, Ctrl-C, modifier reset, paste, Enter" : "FAIL: " + failures.joined(separator: ", ")
     }
 }
 
