@@ -27,7 +27,7 @@
         let hostKey: String
         private let log: FileHandle
 
-        init() throws {
+        init(allowExec: Bool = false) throws {
             directory = FileManager.default.temporaryDirectory.appendingPathComponent(
                 "moshdeck-sshd-\(UUID().uuidString)")
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
@@ -57,13 +57,22 @@
             guard bound else { throw FixtureError.socketFailed }
             port = Int(UInt16(bigEndian: address.sin_port))
             let config = directory.appendingPathComponent("sshd_config")
+            var forcedCommand =
+                "/usr/bin/env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin HOME=\(directory.path) TERM=xterm-256color /bin/sh"
+            if allowExec {
+                let runner = directory.appendingPathComponent("exec-fixture.sh")
+                try """
+                exec /usr/bin/env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin HOME='\(directory.path)' TERM=xterm-256color /bin/sh -c "$SSH_ORIGINAL_COMMAND"
+                """.write(to: runner, atomically: true, encoding: .utf8)
+                forcedCommand = "/bin/sh \(runner.path)"
+            }
             try """
             ListenAddress 127.0.0.1
             Port \(port)
             HostKey \(host.path)
             PidFile \(directory.appendingPathComponent("sshd.pid").path)
             AuthorizedKeysFile \(publicKey.path)
-            ForceCommand /usr/bin/env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin HOME=\(directory.path) TERM=xterm-256color /bin/sh
+            ForceCommand \(forcedCommand)
             StrictModes no
             UsePAM no
             UseDNS no
@@ -247,6 +256,65 @@
                 #expect((error as? ConnectionFailure)?.stage == .hostVerification)
                 #expect((error as? ConnectionFailure)?.code == "hostKeyMismatch")
             }
+        }
+
+        @Test func missingTmuxSessionFailsWithoutReplacingIt() async throws {
+            let candidates = ["/opt/homebrew/bin/tmux", "/usr/local/bin/tmux"]
+            let executable = try #require(candidates.first { FileManager.default.isExecutableFile(atPath: $0) })
+            let fixture = try OpenSSHFixture(allowExec: true)
+            try await fixture.start()
+            let socketName = "moshdeck-test-\(UUID().uuidString)"
+            func tmux(_ arguments: [String]) throws -> Int32 {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: executable)
+                process.arguments = ["-L", socketName, "-f", "/dev/null"] + arguments
+                process.environment = [
+                    "PATH": "/usr/bin:/bin", "HOME": fixture.directory.path, "TERM": "xterm-256color",
+                ]
+                process.standardOutput = FileHandle.nullDevice
+                process.standardError = FileHandle.nullDevice
+                try process.run()
+                process.waitUntilExit()
+                return process.terminationStatus
+            }
+            #expect(try tmux(["new-session", "-d", "-s", "retained", "exec /bin/sleep 600"]) == 0)
+            defer { _ = try? tmux(["kill-server"]) }
+            let wrapper = fixture.directory.appendingPathComponent("tmux-fixture")
+            try "#!/bin/sh\nexec '\(executable)' -L '\(socketName)' -f /dev/null \"$@\"\n"
+                .write(to: wrapper, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: wrapper.path)
+            let (events, continuation) = AsyncStream<ConnectionEvent>.makeStream()
+            var profile = fixture.profile
+            profile.intent = .createOrAttach(name: "missing").reconnectIntent
+            profile.tmuxExecutable = wrapper.path
+            var connection: SSHConnection?
+            do {
+                connection = try await SSHConnection.connect(
+                    profile: profile, identity: fixture.identity, columns: 80, rows: 24,
+                    output: { _ in }, event: { continuation.yield($0) })
+                let status = try await withThrowingTaskGroup(of: Int.self) { group in
+                    group.addTask {
+                        for await event in events {
+                            if case .remoteExit(let code) = event { return code }
+                        }
+                        throw FixtureError.outputTimeout
+                    }
+                    group.addTask {
+                        try await Task.sleep(for: .seconds(5))
+                        throw FixtureError.outputTimeout
+                    }
+                    defer { group.cancelAll() }
+                    return try await #require(group.next())
+                }
+                #expect(status != 0)
+            } catch let failure as ConnectionFailure {
+                #expect(failure.stage == .tmux)
+                #expect(failure.code.hasPrefix("remoteExit="))
+            }
+            continuation.finish()
+            await connection?.close()
+            #expect(try tmux(["has-session", "-t", "=missing"]) != 0)
+            #expect(try tmux(["has-session", "-t", "=retained"]) == 0)
         }
 
         @Test func syntheticOutputThroughputAndInterrupt() async throws {
