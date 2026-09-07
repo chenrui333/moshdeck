@@ -1,0 +1,44 @@
+{
+  "version": "3.4.0",
+  "revision": "fa7b859994228a9c8759f99c55a8d31ee92a1b5e",
+  "scope": "License files present under src/glyphs; not proof of complete source-glyph attribution",
+  "files": [
+    {
+      "source": "src/glyphs/codicons/LICENSE.txt",
+      "sha256": "d6239afa918961b465b07bf7411cbe34ff6685854f58553db7966f4881a0211f"
+    },
+    {
+      "source": "src/glyphs/font-awesome/LICENSE.txt",
+      "sha256": "de784a808496d49f5f80dd9d1d6e9a51cff712cfbc339e7c25155631ae3cdb5d"
+    },
+    {
+      "source": "src/glyphs/materialdesign/LICENSE",
+      "sha256": "3bae6305bcaa6d10219b999f65c342034c2d40b1c0e8567fa08605e73ccba829"
+    },
+    {
+      "source": "src/glyphs/octicons/LICENSE",
+      "sha256": "4f886642f9e8d99eeadd484acdac011c3fde8a338faf52f5ca1408c13b9a9b63"
+    },
+    {
+      "source": "src/glyphs/pomicons/LICENSE",
+      "sha256": "cb4797a9745683f287c28833db596e9d68ec43082d59359b3a49c504f0f610ce"
+    },
+    {
+      "source": "src/glyphs/powerline-extra/LICENSE",
+      "sha256": "544307a58e6826c24145b2af1c3578b53e2e21ae0e6c67ab4c6abd544304d26a"
+    },
+    {
+      "source": "src/glyphs/powerline-symbols/LICENSE.txt",
+      "sha256": "46d5355e4734468135d8e4a30d0916292cc4df2b3ec30aa68c866f82497933be"
+    },
+    {
+      "source": "src/glyphs/weather-icons/OFL.txt",
+      "sha256": "69cdedc8a4f57a30d68e4f045af8b9cce0ec3b1a6e7eec1ad41737c894f26790"
+    }
+  ],
+  "font_metadata": {
+    "copyright": "Copyright (c) 2016, Ryan McIntyre",
+    "version": "Version 001.000;Nerd Fonts 3.4.0",
+    "license_name_records": "No name IDs 13 or 14 in inspected SymbolsNerdFont-Regular.ttf"
+  }
+}
