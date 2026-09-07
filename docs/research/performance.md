@@ -29,7 +29,7 @@ The preservation checkpoint reran the exact 1 MiB Mac loopback OpenSSH transfer 
 
 | Metric | State | Next measurement |
 | --- | --- | --- |
-| Current-build connection/recovery | NOT TESTED | Several samples per controlled scenario; separate app unlock |
+| Implementation-build connection/recovery | Observed, uncontrolled: see below | Repeat per controlled scenario; separate network restoration and app unlock |
 | Typing/echo | NOT TESTED | Subjective observation plus controlled echo timing if needed |
 | Redraw/scrollback/resize | NOT TESTED | Ordinary full-screen tasks and moderate output |
 | CPU/memory/thermal | NOT TESTED | Instruments during meaningful active session and output |
@@ -38,3 +38,14 @@ The preservation checkpoint reran the exact 1 MiB Mac loopback OpenSSH transfer 
 | Existing mature client | NOT TESTED | Same host/tmux and network if client available |
 
 No new transport or renderer is justified by these limited observations. Investigate stage-specific regressions before optimization. Source rebuild/compiler performance is not terminal runtime performance.
+
+## Implementation-phase phone observations
+
+| Attempt | Conditions | Attempt to interactive output |
+| --- | --- | --- |
+| 94988E20 | First connection with foreground-unlimited lock policy | 2.243891 s |
+| 6E893B53 | Updated TCP-recovery build, owner echo check | 2.044113 s |
+| 3F29944B | Automatic reconnect after 416.27-second lock and app authentication | 2.494949 s |
+| 2B6B4958 | Successful attempt after Airplane Mode, then 5G | 5.572399 s |
+
+Across these four mixed observations: min 2.044 s, median 2.369 s, max 5.572 s. They span builds and network conditions and are not a controlled comparison. The outage-to-5G sequence took 38.409987 seconds from its first foreground event to output, including retries while the Mac was unreachable; the exact restoration time is unknown. Do not label that interval app reconnect overhead. The Mac was also running an isolated dependency build during the last observation. The owner reported the recovery display was much better with the view-identity fix; this is subjective visual acceptance, not frame-timing evidence.

@@ -152,12 +152,12 @@ Input hardening is in 8ea2a12: a per-attempt pipe cannot rebind after stop, disc
 | Screen lock >=5 min | PASS: owner confirmation plus 416.27-second background trace | Authentication then automatic foreground reconnect | PID 89665, pane %0 | 2.495 s from reconnect attempt | Composer separately owner-confirmed; exact draft/screen assertions not instrumented |
 | Screen lock >=20 min | NOT TESTED | Auth expected | Pending | Pending | Pending |
 | Screen lock >=60 min | NOT TESTED | Auth expected | Pending | Pending | Pending |
-| Full outage/airplane mode | NOT TESTED | Classify recovery independently | Pending | Pending | Pending |
+| Full outage/airplane mode | PASS for recovery: owner confirmed Airplane Mode then 5G | Automatic recovery; no additional app unlock | PID 89665, pane %0 | 38.41 s from initial foreground, network restoration time unknown | Display improved; offline-input/draft assertions not separately observed |
 | Wi-Fi → cellular | PARTIAL: owner-reported spike success | No repeat auth in sampled interval; current policy retest pending | Spike same PID | Mixed route, not measured transition latency | Not individually checked |
 | Cellular → Wi-Fi | NOT TESTED | Pending | Pending | Pending | Pending |
 | Force termination/relaunch | PARTIAL: profile survived build replacement | Cold launch auth; manual Connect | Spike same PID | See sample ledger | Draft/explicit kill test pending |
 | Mac unavailable/reachable | NOT TESTED | Actionable failure/retry required | Pending | Pending | Pending |
-| Short absence, new policy | PASS for recovery, slow reachability noted: 75.27 s absence | Automatic retries/foreground recovery; no new app unlock | PID 89665 | 38.41 s from first foreground; final attempt 5.57 s | Owner reports display much better; copy not separately confirmed |
+| Short absence, new policy | PARTIAL: observed 75.27 s absence included Airplane Mode → 5G | Automatic recovery without new app unlock | PID 89665 | Cannot isolate unchanged-network background latency | Owner reports display improved; copy not separately confirmed |
 | Explicit Lock, new policy | NOT TESTED | Close/hide, authenticate, restore desire | Pending | Pending | Composer privacy pending |
 
 Real CLI compatibility and performance now have separate [terminal](terminal-compatibility.md) and [performance](performance.md) records. No unrun row is filled from a similar test.
@@ -209,3 +209,7 @@ The successful build containing `5582b2a` was installed and CoreDevice launched 
 The owner reported recovery was “much better” after installing the view-identity fix. Diagnostics show inactivity from 1788758167.960838 to 1788758243.231370 (75.270532 seconds), TCP shutdown correctly classified retryable, automatic foreground/retry attempts, and no additional app authentication. Several opening-transport timeouts preceded successful foreground-resume attempt `2B6B4958-F9FC-4D09-8AE4-53685C908992`. Output arrived 38.409987 seconds after the first foreground event, or 5.572399 seconds after the successful attempt began. Mac metadata again confirmed PID `89665`, pane `%0`.
 
 Record automatic short-absence recovery and subjective display improvement as passed for this observed run, with slow recovery as an unresolved reliability/performance concern. The actual network-restoration time and route were not measured; the host was also compiling the isolated Ghostty source build. Do not call this a controlled 30-second background benchmark or attribute timeout causes without further evidence. Long-press Copy was requested but not independently confirmed by the owner's general improvement report.
+
+## Clarification: Airplane Mode to 5G
+
+The owner clarified that the improved-recovery test used Airplane Mode and then switched to 5G. This resolves the earlier unknown test conditions for the `2B6B4958` recovery sequence. Record successful full-outage-to-5G recovery, not an isolated unchanged-Wi-Fi background test. The 38.409987 seconds begins at first foreground activation and includes an unknown amount of continued unreachability/network transition. It is not app-only recovery latency or a measured post-restoration SLA. The 5.572399-second successful SSH attempt is separately observable. Offline raw-input rejection, exact outage duration, clipboard behavior and draft retention were not separately confirmed by this result.
