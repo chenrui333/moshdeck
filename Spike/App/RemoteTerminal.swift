@@ -56,84 +56,6 @@ private enum PhoneIdentityStore {
     enum IdentityError: Error { case keychain(OSStatus) }
 }
 
-/// Callbacks enter synchronously from Ghostty. A locked FIFO preserves their
-/// arrival order, and one worker awaits each SSH write. No per-byte Task race.
-private final class TerminalInputPipe: @unchecked Sendable {
-    private let lock = NSLock()
-    private var queue: [Data] = []
-    private var queuedBytes = 0
-    private var connection: SSHConnection?
-    private var active = true
-    private var draining = false
-    private let failed: @Sendable () -> Void
-
-    init(failed: @escaping @Sendable () -> Void) { self.failed = failed }
-
-    func bind(_ connection: SSHConnection) {
-        lock.lock()
-        if active { self.connection = connection }
-        let start = active && !draining && !queue.isEmpty
-        if start { draining = true }
-        lock.unlock()
-        if start { startDrain() }
-    }
-
-    func enqueue(_ data: Data) {
-        lock.lock()
-        guard active else {
-            lock.unlock()
-            return
-        }
-        guard queuedBytes + data.count <= 128 * 1024 else {
-            active = false
-            queue.removeAll()
-            queuedBytes = 0
-            lock.unlock()
-            failed()
-            return
-        }
-        queue.append(data)
-        queuedBytes += data.count
-        let start = connection != nil && !draining
-        if start { draining = true }
-        lock.unlock()
-        if start { startDrain() }
-    }
-
-    func stop() {
-        lock.lock()
-        active = false
-        connection = nil
-        queue.removeAll()
-        queuedBytes = 0
-        lock.unlock()
-    }
-
-    private func next() -> (SSHConnection, Data)? {
-        lock.lock()
-        defer { lock.unlock() }
-        guard active, let connection, !queue.isEmpty else {
-            draining = false
-            return nil
-        }
-        let bytes = queue.removeFirst()
-        queuedBytes -= bytes.count
-        return (connection, bytes)
-    }
-
-    private func startDrain() {
-        Task {
-            while let (connection, bytes) = next() {
-                do { try await connection.send(bytes) } catch {
-                    stop()
-                    failed()
-                    return
-                }
-            }
-        }
-    }
-}
-
 @MainActor
 final class RemoteTerminalModel: ObservableObject {
     @Published var host = ""
@@ -417,7 +339,7 @@ final class RemoteTerminalModel: ObservableObject {
                     persistDiagnostics()
                     return
                 }
-                pipe.bind(live)
+                pipe.bind { bytes in try await live.send(bytes) }
                 lifecycle.accepted(id)
                 showConnectedIfReady(id)
                 persistDiagnostics()
@@ -535,6 +457,7 @@ final class RemoteTerminalModel: ObservableObject {
         }
     }
     private func stopTransport(cancelAttempt: Bool = true) {
+        terminal?.attachedPlatformView?.resignFirstResponder()
         eventContinuation?.finish()
         eventContinuation = nil
         input?.stop()
