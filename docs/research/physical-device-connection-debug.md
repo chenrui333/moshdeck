@@ -148,8 +148,8 @@ Input hardening is in 8ea2a12: a per-attempt pipe cannot rebind after stop, disc
 
 | Required MVP scenario | Result | Reconnect / Face ID | Same process | Output timing | Draft / prior screen / error |
 | --- | --- | --- | --- | --- | --- |
-| Foreground >5 min, new policy | NOT TESTED on device | Must remain unlocked/connected | Pending | Pending | Pending |
-| Screen lock >=5 min | NOT TESTED | Auth expected after absence grace | Pending | Pending | Pending |
+| Foreground >5 min, new policy | PARTIAL: owner recalls testing successfully; exact uninterrupted duration unconfirmed | No reported auth interruption | Same shell in adjacent observations | Not timed | Do not substitute lock recovery |
+| Screen lock >=5 min | PASS: owner confirmation plus 416.27-second background trace | Authentication then automatic foreground reconnect | PID 89665, pane %0 | 2.495 s from reconnect attempt | Composer separately owner-confirmed; exact draft/screen assertions not instrumented |
 | Screen lock >=20 min | NOT TESTED | Auth expected | Pending | Pending | Pending |
 | Screen lock >=60 min | NOT TESTED | Auth expected | Pending | Pending | Pending |
 | Full outage/airplane mode | NOT TESTED | Classify recovery independently | Pending | Pending | Pending |
@@ -191,3 +191,11 @@ The owner reported that “test2” recovered successfully but showed screen fla
 Read-only inspection of the pinned wrapper found `TerminalViewRepresentable.configureView` assigns `view.delegate = context` only for initial creation. Its later updates replace the controller/configuration and attach the new state, but do not refresh that delegate. MoshDeck had reused the same SwiftUI view position while replacing TerminalViewState after reconnect. The app now keys TerminalSurfaceView by the terminal state object identity so a replacement state creates its own UIKit view/delegate. The old rendered surface remains selected until the replacement connection is ready, as before.
 
 The iPhone-target build passed. This fixes a concrete stale-delegate risk (including selection callbacks bound to an older attempt); it does not establish the cause of the reported screen flakiness. Physical reconnect, long-press selection after reconnect, keyboard focus and resize need regression checks before claiming a visual fix. The changed build was not installed during the owner’s ongoing lock test.
+
+## Screen-lock and composer acceptance — September 7, 01:14 EDT
+
+The owner confirmed screen-lock recovery and the composer check looked good, and later recalled having performed the foreground check earlier. The foreground report is retained as partial because the exact uninterrupted duration was not established; a repeat is not being requested immediately.
+
+The retrieved trace shows background at 1788757519.077924 and return to active at 1788757935.350079: 416.272155 seconds (6 min 56 sec). The expired background grace was enforced, app authentication succeeded at 1788757948.667827, and automatic foreground-resume attempt `3F29944B-5B23-4E57-9A4D-2E89C2E0B284` produced interactive output in 2.494949 seconds. Independent Mac metadata confirms the same shell PID `89665` and pane `%0`, now 37×25. This passes the at-least-five-minute lock/authentication/automatic-reattach test on the installed recovery-fix build. It does not pass the separate 20/60-minute rows.
+
+Basic composer use is owner-confirmed. The individual 1/10/50 KB, dictation, copy/Unicode, clear/relaunch, draft-after-kill and privacy-cover cases were not separately enumerated and remain pending. Earlier reported display flakiness remains an open visual issue. The terminal-view identity fix is built but still not installed, so this acceptance does not validate that change.

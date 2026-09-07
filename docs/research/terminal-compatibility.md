@@ -42,4 +42,8 @@ Composer dismissal now saves the profile/draft through the existing device-only 
 
 ## Large-input transport evidence
 
-The isolated local OpenSSH integration test passed synthetic 1,024-, 10,240- and 51,200-byte UTF-8 payloads containing Chinese, Japanese, emoji, combining characters and newlines. It wrapped payloads in bracketed-paste delimiters, split writes every 31 bytes through TerminalInputPipe, and compared the server-side SHA-256 of the expected byte count before verifying shell input recovery. All three cases passed. This exercises queue/SSH/PTY byte preservation; it does not exercise Ghostty paste encoding, native composer behavior, mobile networks, or application interpretation of bracketed paste. Physical composer acceptance remains NOT TESTED.
+The isolated local OpenSSH integration test passed synthetic 1,024-, 10,240- and 51,200-byte UTF-8 payloads containing Chinese, Japanese, emoji, combining characters and newlines. It wrapped payloads in bracketed-paste delimiters, split writes every 31 bytes through TerminalInputPipe, and compared the server-side SHA-256 of the expected byte count before verifying shell input recovery. All three cases passed. This exercises queue/SSH/PTY byte preservation; it does not exercise Ghostty paste encoding, native composer behavior, mobile networks, or application interpretation of bracketed paste. Large-prompt physical composer acceptance remains NOT TESTED; basic composer use was subsequently owner-confirmed.
+
+## Owner composer check — September 7, 01:14 EDT
+
+The owner confirmed the composer check looked good on the installed recovery-fix build after screen-lock recovery. Record basic composer use as PASS (owner report). Do not infer separate passage of all size, clear/relaunch, clipboard, dictation, Unicode or process-termination cases from that short confirmation. Those detailed checks remain pending.
