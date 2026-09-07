@@ -1,1 +1,22 @@
-# moshdeck
+# MoshDeck
+
+A research-stage personal iPhone terminal for controlling an existing development workspace on an awake Mac.
+
+The proposed starting point is a native terminal frontend, ordinary SSH over the official Tailscale VPN, and tmux for Mac/iPhone session continuity. Mosh is not an initial requirement. No custom backend or agent-specific protocol is planned.
+
+- [Product direction](docs/product-direction.md)
+- [Architecture and decisions](docs/architecture.md)
+- [libghostty investigation](docs/research/libghostty.md)
+- [Transport comparison](docs/research/transport.md)
+- [SSH libraries](docs/research/ssh.md)
+- [Existing clients and agent features](docs/research/ecosystem.md)
+- [Dependency licensing](docs/research/licenses.md)
+- [iOS lifecycle](docs/research/ios-lifecycle.md)
+- [Security threat model](docs/security.md)
+- [First spike plan](docs/spike-plan.md)
+- [Connection lifecycle](docs/research/connection-lifecycle.md)
+- [Physical connection debugging](docs/research/physical-device-connection-debug.md)
+- [UX debugging handoff](docs/research/ux-debug-handoff.md)
+- [Actual results and open gates](docs/research/spike-results.md)
+
+The [minimal spike](Spike/README.md) has basic physical-iPhone frontend and local OpenSSH/tmux test evidence. Full tailnet/mobile workflow validation is still pending. Research is not device validation. See the results document before relying on any claimed capability.

@@ -1,0 +1,55 @@
+{
+  "observed_local_date": "2026-09-06",
+  "sources": [
+    {
+      "repo": "ghostty-org/ghostty",
+      "sha": "82938b633ba646db38591d969c3c526332bd7e65",
+      "date": "2026-09-06T18:35:00-07:00"
+    },
+    {
+      "repo": "Lakr233/libghostty-spm",
+      "sha": "733ae3b29d447b6707cbfc00879027a076dfd0eb",
+      "date": "2026-09-06T15:57:30+09:00"
+    },
+    {
+      "repo": "h3nock/remux",
+      "sha": "d098ec6ae5165116e32621b265ec934b087fb5c0",
+      "date": "2026-09-06T04:23:23-04:00"
+    },
+    {
+      "repo": "libssh2/libssh2",
+      "sha": "8e181e7a8e2ded832be63d2e0749d8ff8dc26cd6",
+      "date": "2026-09-04T16:56:17+02:00"
+    },
+    {
+      "repo": "apple/swift-nio-ssh",
+      "sha": "3ec281496f28a3b6581afd946b759e2642f5cd8d",
+      "date": "2026-07-28T12:26:04+01:00"
+    },
+    {
+      "repo": "orlandos-nl/Citadel",
+      "sha": "ae8562f895de06ccb86fdb1cbb65fd99c8976e12",
+      "date": "2026-04-04T10:14:15+02:00"
+    },
+    {
+      "repo": "blinksh/blink",
+      "sha": "a90b4423c8b7a86770c24a7eaa6c13b0a5904b18",
+      "date": "2026-04-14T10:00:04-04:00"
+    },
+    {
+      "repo": "mobile-shell/mosh",
+      "sha": "decd9b705eb81626f694335b8d5940538beb06da",
+      "date": "2026-03-22T16:20:13-04:00"
+    },
+    {
+      "repo": "migueldeicaza/SwiftTerm",
+      "sha": "11f173c91ff6dff7c8365798ac7d8e79a9e5e810",
+      "date": "2026-09-06T14:25:26-04:00"
+    },
+    {
+      "repo": "NMSSH/NMSSH",
+      "sha": "94624c90e357eda412e40c1a3d9dec1a1cb7479d",
+      "date": "2018-08-17T01:36:11+01:00"
+    }
+  ]
+}
