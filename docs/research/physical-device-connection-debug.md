@@ -161,3 +161,9 @@ Input hardening is in 8ea2a12: a per-attempt pipe cannot rebind after stop, disc
 | Explicit Lock, new policy | NOT TESTED | Close/hide, authenticate, restore desire | Pending | Pending | Composer privacy pending |
 
 Real CLI compatibility and performance now have separate [terminal](terminal-compatibility.md) and [performance](performance.md) records. No unrun row is filled from a similar test.
+
+## New-policy phone connection — September 7, 00:49 EDT
+
+The owner reported unlocking and connecting. Retrieved device diagnostics show foreground activation, one successful app unlock, and manual connection attempt `94988E20-DF1A-4530-A222-6B0E033F004C`. Host verification, public-key authentication, channel opening, PTY allocation and tmux command acceptance succeeded. First interactive output arrived 2.243891 seconds after attempt start. The app reported `unlocked(until: nil)`, confirming the foreground-unlimited policy was running. Independent Mac tmux metadata still showed pane `%0`, shell PID `89665`, and size 37×25 in the existing spike session. No terminal contents were collected.
+
+This proves a successful connection under the new lock policy, not six minutes of foreground continuity. That timed test began with this connection and was still pending at this checkpoint. Later input, selection, composer and error-message commits had built but were not installed during this test; do not attribute their acceptance to this run.
