@@ -196,6 +196,7 @@ private struct TerminalHarness: View {
 @MainActor
 func safeTerminalConfiguration() -> TerminalConfiguration {
     TerminalConfiguration { builder in
+        builder.withCustom("font-family", "JetBrains Mono")
         builder.withCustom("clipboard-read", "deny")
         builder.withCustom("clipboard-write", "deny")
         builder.withCustom("link-url", "false")

@@ -49,3 +49,7 @@ Longer screen-lock, complete outage, actual iTerm2 UI, real Codex, broad full-sc
 ## Deferred scope
 
 No Mosh, backend, signup, companion, notifications, agent APIs/dashboard, files/editor/Git UI, SCP/SFTP browser, multiple simultaneous terminals, plugins, themes marketplace, iCloud sync or analytics SDK. Architecture changes require new acceptance evidence, not preference for novelty.
+
+## Typography
+
+The terminal explicitly requests JetBrains Mono at the current 14-point default. The pinned Ghostty core embeds variable regular/italic JetBrains Mono faces and retains fallback handling for other glyphs. Original app controls and the native composer use iOS fonts; the selection sheet uses a Dynamic Type-scaled system monospaced font. No font picker is included. The JetBrains Mono SIL Open Font License notice is bundled in `Spike/App/Notices/JetBrainsMono-OFL.txt`. This is one dependency notice, not completion of the full third-party notice audit.
