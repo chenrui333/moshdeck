@@ -1,12 +1,12 @@
 # Connection lifecycle and diagnostics
 
-Status: engineering spike hardening, 2026-09-06. Architecture remains Ghostty + SSH over official Tailscale + ordinary Mac OpenSSH + tmux. Codex and additional services are outside this debugging phase.
+Status: daily-use MVP implementation, 2026-09-07. Architecture remains Ghostty + SSH over official Tailscale + ordinary Mac OpenSSH + tmux. Actual Codex terminal use is an acceptance workload; agent APIs and additional services remain out of scope.
 
 ## Ownership and states
 
 `AppLockPolicy` and `ConnectionLifecycle` are independent value models in MoshDeckCore. `RemoteTerminalModel` is MainActor-isolated and orchestrates them. `SSHConnection` is an actor wrapping NIO event-loop-confined handlers. Ghostty receives ordered bytes and emits input/resize callbacks; it does not navigate or choose retries.
 
-App lock states: locked, unlocking, unlocked(until), unlockFailed. Connection states: idle, starting(stage), connected, reconnecting(retry index), disconnected, cancelled, failed(structured failure). UI progress and input availability derive from these states; they are not independently toggled connection booleans.
+App lock states: locked, unlocking, unlocked(until: optional deadline), unlockFailed. An absent deadline means authenticated foreground access. Connection states: idle, starting(stage), connected, reconnecting(retry index), disconnected, cancelled, failed(structured failure). UI progress and input availability derive from these states; they are not independently toggled connection booleans.
 
 Each explicit or automatic attempt gets a UUID. Event acceptance is invalidated on cancellation/background/disconnect without changing the historical attempt UUID. A new attempt gets a new UUID. Stale events cannot change the current attempt. Ordered SSH events travel through one AsyncStream consumer on MainActor. Terminal-output callbacks never export the bytes as diagnostics. Scene transitions, unlock request/success, lock reason and connect trigger are also recorded as local categories so foreground recovery can be distinguished from manual Connect and retry timers.
 
@@ -42,9 +42,11 @@ The app retains up to five previous attempt summaries plus the current bounded 1
 
 ## Unlock policy
 
-Cold launch locks remote-control access. Explicit Unlock MoshDeck performs device-owner authentication, normally Face ID with system fallback, then grants a fixed five-minute window. Connect, retries, reconnect and public-key display do not call LocalAuthentication during that window. Expiry or explicit Lock closes active transport and hides the terminal; the user must unlock again. Expiry applies even while foregrounded in this spike and may need usability adjustment later.
+Cold launch locks remote-control access. Explicit Unlock MoshDeck uses device-owner authentication (Face ID with system fallback). Authenticated foreground use has **no expiry**. Connect/retry/reconnect never invoke LocalAuthentication.
 
-A brief background interval does not invalidate the unlock deadline. Network reconnect and app unlock remain separate decisions. Profile, verified host key and draft are stored in a device-only, when-unlocked Keychain record; private key storage remains separate. Failure to save is surfaced. App-switcher privacy remains independent of grace; inactive scenes are covered immediately. Persistence after force-termination and lock timing still require physical acceptance.
+The first inactive transition starts a five-minute grace period. A subsequent background transition retains the same deadline. Returning before that deadline clears it and keeps the app unlocked; a new absence starts a new grace period. At or after the deadline, foreground entry locks before allowing input, even if iOS suspended the app and no timer ran. Successful authentication allows the desired session to reconnect. Explicit Lock immediately hides the terminal and closes transport while retaining session desire. The composer is covered/dismissed when app access locks.
+
+Profile, verified host key and draft use a separate device-only, when-unlocked Keychain record. Inactive transitions save drafts before transport closes. App-switcher privacy applies immediately, independently of the grace period. Deterministic clock tests cover the policy; the changed policy still requires real-phone foreground, short absence, long absence, Face ID and composer privacy validation. Earlier timer-expiry evidence belongs to the preserved spike policy, not this implementation.
 
 ## Reconnect and cancellation
 

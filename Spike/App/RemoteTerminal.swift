@@ -259,19 +259,26 @@ final class RemoteTerminalModel: ObservableObject {
             appLock.unlocked(at: Date())
             lifecycle.note("app unlock succeeded")
             persistDiagnostics()
-            notice = "App unlocked for five minutes. Connections do not require another Face ID."
-            lockTask?.cancel()
-            lockTask = Task { [weak self] in
-                try? await Task.sleep(for: .seconds(300))
-                guard !Task.isCancelled else { return }
-                self?.lock(reason: "grace expired")
-            }
+            notice = "App unlocked. Authentication is required after five minutes away or explicit Lock."
+            scheduleBackgroundLock()
             if desiredActive && sceneActive { connect(trigger: "after app unlock") }
         } catch {
             appLock.failed()
             notice = "App unlock failed (LocalAuthentication code \((error as NSError).code)). Try Unlock again."
             lifecycle.note("app unlock failure code=\((error as NSError).code)")
             persistDiagnostics()
+        }
+    }
+
+    private func scheduleBackgroundLock() {
+        lockTask?.cancel()
+        lockTask = nil
+        guard !sceneActive, let deadline = appLock.deadline else { return }
+        let delay = max(0, deadline.timeIntervalSinceNow)
+        lockTask = Task { [weak self] in
+            do { try await Task.sleep(for: .seconds(delay)) } catch { return }
+            guard let self, !self.sceneActive, self.appLock.deadline == deadline else { return }
+            if !self.appLock.permitsAccess(at: Date()) { self.lock(reason: "background grace expired") }
         }
     }
 
@@ -566,6 +573,12 @@ final class RemoteTerminalModel: ObservableObject {
         persistDiagnostics()
         if phase != .active { saveSession() }
         sceneActive = phase == .active
+        if sceneActive {
+            appLock.enterForeground(at: Date())
+        } else {
+            appLock.leaveForeground(at: Date())
+        }
+        scheduleBackgroundLock()
         terminal?.isSurfaceVisible = sceneActive
         if !sceneActive { terminal?.attachedPlatformView?.resignFirstResponder() }
         if phase == .background {
@@ -674,6 +687,9 @@ struct RemoteTerminalScreen: View {
         }
         .overlay { if phase != .active { Color.black.ignoresSafeArea() } }
         .onChange(of: phase) { _, value in model.phaseChanged(value) }
+        .onChange(of: model.unlocked) { _, unlocked in
+            if !unlocked { composing = false }
+        }
 
         .sheet(isPresented: $composing) {
             NavigationStack {
@@ -683,6 +699,7 @@ struct RemoteTerminalScreen: View {
                     Button("Paste without added Enter") { model.pasteDraft() }.disabled(!model.isLive)
                     Button("Enter key") { model.terminal?.sendKey(.enter) }.disabled(!model.isLive)
                 }.padding().navigationTitle("Compose")
+                    .overlay { if !model.unlocked { Color.black.ignoresSafeArea() } }
                     .toolbar { Button("Done") { composing = false } }
                     .confirmationDialog(
                         "Pasted newlines may execute in a shell. Inspect the host and foreground program before pasting.",

@@ -45,7 +45,7 @@ struct ConnectionLifecycleTests {
         #expect(model.state == .starting(.preparation))
         #expect(model.firstFailure == nil)
     }
-    @Test func retryUsesExistingAppUnlockUntilExpiry() {
+    @Test func retryUsesExistingAppUnlockWithoutForegroundExpiry() {
         let now = Date(timeIntervalSince1970: 1000)
         var lock = AppLockPolicy(grace: 300)
         #expect(!lock.permitsAccess(at: now))
@@ -56,7 +56,7 @@ struct ConnectionLifecycleTests {
         connection.fail(first, .init(stage: .openingTransport, code: "reset", retryable: true))
         _ = connection.begin()
         #expect(lock.permitsAccess(at: now.addingTimeInterval(20)))
-        #expect(!lock.permitsAccess(at: now.addingTimeInterval(300)))
+        #expect(lock.permitsAccess(at: now.addingTimeInterval(3600)))
         lock.lock()
         #expect(!lock.permitsAccess(at: now))
     }

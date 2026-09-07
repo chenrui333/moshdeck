@@ -126,20 +126,44 @@ public struct ConnectionLifecycle: Sendable {
 
 public enum AppLockState: Sendable, Equatable {
     case locked, unlocking
-    case unlocked(until: Date)
+    /// nil means authenticated foreground use, with no wall-clock expiry.
+    case unlocked(until: Date?)
     case unlockFailed
 }
 
 public struct AppLockPolicy: Sendable {
     public private(set) var state: AppLockState = .locked
+    public private(set) var isForeground = true
     public let grace: TimeInterval
-    public init(grace: TimeInterval = 300) { self.grace = grace }
+    public init(grace: TimeInterval = 300) { self.grace = max(0, grace) }
+    public var deadline: Date? {
+        if case .unlocked(let until) = state { return until }
+        return nil
+    }
     public func permitsAccess(at now: Date) -> Bool {
-        if case .unlocked(let until) = state { return now < until }
-        return false
+        guard case .unlocked(let until) = state else { return false }
+        return until.map { now < $0 } ?? true
     }
     public mutating func beginUnlock() { state = .unlocking }
-    public mutating func unlocked(at now: Date) { state = .unlocked(until: now.addingTimeInterval(grace)) }
+    public mutating func unlocked(at now: Date) {
+        state = .unlocked(until: isForeground ? nil : now.addingTimeInterval(grace))
+    }
+    /// Inactive -> background is one absence, not a fresh grace period.
+    public mutating func leaveForeground(at now: Date) {
+        isForeground = false
+        if case .unlocked(until: nil) = state {
+            state = .unlocked(until: now.addingTimeInterval(grace))
+        }
+    }
+    /// Evaluate expiry before removing the deadline; suspension need not run a timer.
+    public mutating func enterForeground(at now: Date) {
+        expireIfNeeded(at: now)
+        isForeground = true
+        if case .unlocked = state { state = .unlocked(until: nil) }
+    }
+    public mutating func expireIfNeeded(at now: Date) {
+        if let deadline, now >= deadline { state = .locked }
+    }
     public mutating func failed() { state = .unlockFailed }
     public mutating func lock() { state = .locked }
 }
