@@ -199,3 +199,7 @@ The owner confirmed screen-lock recovery and the composer check looked good, and
 The retrieved trace shows background at 1788757519.077924 and return to active at 1788757935.350079: 416.272155 seconds (6 min 56 sec). The expired background grace was enforced, app authentication succeeded at 1788757948.667827, and automatic foreground-resume attempt `3F29944B-5B23-4E57-9A4D-2E89C2E0B284` produced interactive output in 2.494949 seconds. Independent Mac metadata confirms the same shell PID `89665` and pane `%0`, now 37×25. This passes the at-least-five-minute lock/authentication/automatic-reattach test on the installed recovery-fix build. It does not pass the separate 20/60-minute rows.
 
 Basic composer use is owner-confirmed. The individual 1/10/50 KB, dictation, copy/Unicode, clear/relaunch, draft-after-kill and privacy-cover cases were not separately enumerated and remain pending. Earlier reported display flakiness remains an open visual issue. The terminal-view identity fix is built but still not installed, so this acceptance does not validate that change.
+
+## View-identity fix deployment — September 7, 01:15 EDT
+
+The successful build containing `5582b2a` was installed and CoreDevice launched the app successfully. This supersedes the earlier not-installed note. Requested regression: connect, background for 30 seconds, return, exercise input and long-press Copy, and distinguish transient redraw from persistent corruption. Physical regression results are pending; the earlier screen-lock/composer pass was on the previous build.
