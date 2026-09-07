@@ -64,3 +64,9 @@ Profile, verified host key and draft use a separate device-only, when-unlocked K
 Deterministic tests cover root-error preservation, stale callbacks, lock grace across retry, connected evidence ordering, runtime disconnect, cancellation, and non-retryable host/auth errors. OpenSSH component tests cover actual algorithm/key interoperability, PTY/resize, input/output and host substitution. Opt-in actual-Mac tests authorize a temporary dedicated test identity under file lock and remove it in cleanup; they do not reuse or export personal private keys.
 
 See [physical device investigation](physical-device-connection-debug.md). No backend/signup/agent work is needed to finish this gate. Full mobile reconnect, five-minute lock, path changes and cold-launch acceptance remain required before claiming a daily-use terminal.
+
+### UI automation state contract — 2026-09-07
+
+The `remote.status` accessibility element retains the human-readable status/error as its label and exposes a stable value: `Locked`, `Unlocking`, `Idle`, `Cancelled`, `Connecting`, `Connected`, `Reconnecting`, `Disconnected`, or `Failed`. Locked states conceal transport state. The opt-in physical SSH test now waits on this value instead of the obsolete `Failed at ...` label prefix, so changes to actionable error wording cannot hide an observed failure behind the full timeout. Failure assertions retain the visible stage-specific message.
+
+The simulator `testSSHSetupRequiresAppUnlock` passed with the new value assertion. The physical SSH test compiled but was not run for this change; no new physical acceptance is claimed.

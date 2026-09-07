@@ -108,6 +108,20 @@ final class RemoteTerminalModel: ObservableObject {
         }
     }
 
+    // Keep automation independent of the human-readable, stage-specific error text.
+    var accessibilityConnectionState: String {
+        guard unlocked else { return preparingKey ? "Unlocking" : "Locked" }
+        switch lifecycle.state {
+        case .idle: return "Idle"
+        case .cancelled: return "Cancelled"
+        case .starting: return "Connecting"
+        case .connected: return "Connected"
+        case .reconnecting: return "Reconnecting"
+        case .disconnected: return "Disconnected"
+        case .failed: return "Failed"
+        }
+    }
+
     private struct SavedSession: Codable {
         var host: String
         var username: String
@@ -558,6 +572,7 @@ struct RemoteTerminalScreen: View {
         VStack(spacing: 5) {
             Text(model.status).font(.callout).padding(8)
                 .accessibilityIdentifier("remote.status")
+                .accessibilityValue(model.accessibilityConnectionState)
             if !expanded || !model.isLive {
                 if !model.notice.isEmpty { Text(model.notice).font(.caption) }
                 Button("Copy Diagnostics") { model.copyDiagnostics() }

@@ -25,10 +25,10 @@ final class FrontendTests: XCTestCase {
         guard connect.exists else { return }
         connect.tap()
         let status = app.staticTexts["remote.status"]
-        let finished = NSPredicate(format: "label == 'Connected' OR label BEGINSWITH 'Failed at '")
+        let finished = NSPredicate(format: "value IN %@", ["Connected", "Failed", "Disconnected", "Cancelled"])
         expectation(for: finished, evaluatedWith: status)
         waitForExpectations(timeout: 40)
-        XCTAssertEqual(status.label, "Connected", "Physical connection result: \(status.label)")
+        XCTAssertEqual(status.value as? String, "Connected", "Physical connection result: \(status.label)")
     }
 
     @MainActor
@@ -41,6 +41,7 @@ final class FrontendTests: XCTestCase {
         XCTAssertFalse(app.buttons["Connect"].exists)
         XCTAssertFalse(app.textFields["Mac username"].exists)
         XCTAssertEqual(app.staticTexts["remote.status"].label, "App locked")
+        XCTAssertEqual(app.staticTexts["remote.status"].value as? String, "Locked")
     }
 
     @MainActor
