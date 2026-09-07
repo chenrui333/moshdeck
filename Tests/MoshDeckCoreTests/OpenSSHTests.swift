@@ -108,11 +108,14 @@
             SSHProfile(host: "127.0.0.1", port: port, username: NSUserName(), trustedHostKey: hostKey)
         }
 
-        deinit {
-            if server.isRunning {
-                server.terminate()
-                server.waitUntilExit()
-            }
+        deinit { cleanup() }
+
+        func cleanup() {
+            // Do not waitUntilExit from a Swift task's destructor: Foundation's
+            // run-loop wait can stall even after sshd has exited. Request exit,
+            // then remove our resources now; a termination callback can be lost
+            // when the test runner exits. Child processes own their open FDs.
+            if server.isRunning { server.terminate() }
             try? log.close()
             try? FileManager.default.removeItem(at: directory)
         }
@@ -229,6 +232,7 @@
 
         @Test func verifiedPTYIOResizeAndWrongKeyRejection() async throws {
             let fixture = try OpenSSHFixture()
+            defer { fixture.cleanup() }
             try await fixture.start()
             let output = ReceivedOutput()
             let connection = try await SSHConnection.connect(
@@ -263,6 +267,7 @@
             let candidates = ["/opt/homebrew/bin/tmux", "/usr/local/bin/tmux"]
             let executable = try #require(candidates.first { FileManager.default.isExecutableFile(atPath: $0) })
             let fixture = try OpenSSHFixture(allowExec: true)
+            defer { fixture.cleanup() }
             try await fixture.start()
             let socketName = "moshdeck-test-\(UUID().uuidString)"
             func tmux(_ arguments: [String]) throws -> Int32 {
@@ -321,6 +326,7 @@
         @Test(arguments: [1024, 10 * 1024, 50 * 1024])
         func largeUnicodeInputPreservesBytes(size: Int) async throws {
             let fixture = try OpenSSHFixture()
+            defer { fixture.cleanup() }
             try await fixture.start()
             let output = ReceivedOutput()
             let connection = try await SSHConnection.connect(
@@ -359,6 +365,7 @@
 
         @Test func syntheticOutputThroughputAndInterrupt() async throws {
             let fixture = try OpenSSHFixture()
+            defer { fixture.cleanup() }
             try await fixture.start()
             let output = ReceivedOutput()
             let connection = try await SSHConnection.connect(

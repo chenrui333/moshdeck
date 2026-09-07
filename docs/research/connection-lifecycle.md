@@ -70,3 +70,11 @@ See [physical device investigation](physical-device-connection-debug.md). No bac
 The `remote.status` accessibility element retains the human-readable status/error as its label and exposes a stable value: `Locked`, `Unlocking`, `Idle`, `Cancelled`, `Connecting`, `Connected`, `Reconnecting`, `Disconnected`, or `Failed`. Locked states conceal transport state. The opt-in physical SSH test now waits on this value instead of the obsolete `Failed at ...` label prefix, so changes to actionable error wording cannot hide an observed failure behind the full timeout. Failure assertions retain the visible stage-specific message.
 
 The simulator `testSSHSetupRequiresAppUnlock` passed with the new value assertion. The physical SSH test compiled but was not run for this change; no new physical acceptance is claimed.
+
+### Local fixture cleanup hang — 2026-09-07
+
+A fresh security-regression run stalled after the exact 1 MiB synthetic output transfer. A process sample localized the runner to `OpenSSHFixture.deinit` → Foundation `Process.waitUntilExit`; process inspection showed no remaining child sshd. The runner was explicitly terminated after capturing this evidence. That run is not recorded as passing.
+
+A termination-handler approach and then destructor-only cleanup passed test assertions but left fixture directories at runner exit. Every fixture-using test now calls explicit synchronous cleanup with `defer`; destruction provides a fallback. Cleanup requests server termination, closes the parent log handle and removes temporary credentials/configuration without `waitUntilExit`. Child processes retain their own open file descriptors. The full suite reported 32 tests passing (one opt-in skip) in 4.270 seconds. This changes only local test cleanup, not phone SSH/session lifetime.
+
+Three further serialized OpenSSH-suite runs passed with an independent assertion after each run that no newly created fixture directory remained. Orphans from the interrupted/unsuccessful cleanup experiments were removed after checking that their fixture daemons were absent.
