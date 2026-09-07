@@ -185,3 +185,9 @@ After installation of the recovery-fix build, the owner reported a successful ec
 ## Owner-reported recovery with visual instability
 
 The owner reported that “test2” recovered successfully but showed screen flakiness during recovery. The scenario is not yet disambiguated between the earlier numbered outage test and the screen-lock test being discussed; duration, automatic/manual reconnect, authentication and transient versus persistent visual behavior await clarification. Record this as reported recovery with an unresolved visual issue, not a clean PASS for a duration/network row. Mac metadata still showed shell PID `89665`, pane `%0`, at 37×13. The attempted diagnostic retrieval was denied by device file protection, so no new attempt timeline is available for this report. Do not attribute the visual behavior to Ghostty, resizing or transport without reproduction.
+
+## Reconnect view ownership review
+
+Read-only inspection of the pinned wrapper found `TerminalViewRepresentable.configureView` assigns `view.delegate = context` only for initial creation. Its later updates replace the controller/configuration and attach the new state, but do not refresh that delegate. MoshDeck had reused the same SwiftUI view position while replacing TerminalViewState after reconnect. The app now keys TerminalSurfaceView by the terminal state object identity so a replacement state creates its own UIKit view/delegate. The old rendered surface remains selected until the replacement connection is ready, as before.
+
+The iPhone-target build passed. This fixes a concrete stale-delegate risk (including selection callbacks bound to an older attempt); it does not establish the cause of the reported screen flakiness. Physical reconnect, long-press selection after reconnect, keyboard focus and resize need regression checks before claiming a visual fix. The changed build was not installed during the owner’s ongoing lock test.

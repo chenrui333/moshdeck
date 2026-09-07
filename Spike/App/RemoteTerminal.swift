@@ -578,6 +578,9 @@ struct RemoteTerminalScreen: View {
             }
             if model.unlocked, let terminal = model.terminal {
                 TerminalSurfaceView(context: terminal)
+                    // The pinned wrapper assigns its UIKit delegate only in makeUIView.
+                    // A new remote surface must not reuse the previous attempt's view.
+                    .id(ObjectIdentifier(terminal))
                     .allowsHitTesting(model.isLive && phase == .active)
                 HStack {
                     Button("Esc") { terminal.sendKey(.escape) }
