@@ -177,3 +177,7 @@ Root cause: the NIOSSH error capture branch marked all NIOSSH errors non-retryab
 ## Recovery-fix deployment — September 7, 00:55 EDT
 
 The full core suite at `4628ff7` reported 32 tests passing, including one skipped opt-in real-Mac test. This includes the new TCP-shutdown classification and 1/10/50 KB input cases. The signed Debug app built and installed on the physical iPhone, retaining the existing bundle identity and Keychain data. It includes all input, selection, composer and failure-message changes through that revision. CoreDevice launch was explicitly denied because the phone was locked. Installation succeeded; physical execution of this build is still pending owner unlock/open.
+
+## Updated-build command acceptance — September 7, 00:59 EDT
+
+After installation of the recovery-fix build, the owner reported a successful echo command check. Retrieved diagnostics show attempt `6E893B53-16DD-4321-8FE4-D13EE8BDA60D` succeeding through host verification, authentication, PTY and tmux attachment, with first interactive output in 2.044113 seconds. App lock was `unlocked(until: nil)`. Mac metadata confirmed the original shell PID `89665` and pane `%0` at 37×13. This is a physical basic command/attachment PASS for the updated build; no command output was collected. Automatic TCP-outage recovery, selection/composer features and uninterrupted foreground-duration acceptance remain separate pending tests.
