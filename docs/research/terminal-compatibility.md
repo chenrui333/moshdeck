@@ -39,3 +39,7 @@ The pinned Ghostty UIKit wrapper requires `onTextSelectionRequest` for long-pres
 ## Composer persistence checkpoint
 
 Composer dismissal now saves the profile/draft through the existing device-only Keychain path, in addition to connection, lock and inactivity saves. Clear draft requires confirmation and saves the empty value immediately. The composer sheet explicitly conceals its contents on inactivity as well as app lock. Device validation of dismiss/relaunch, clear/relaunch and app-switcher concealment remains pending; abrupt process termination before a save is not guaranteed to preserve the latest edits.
+
+## Large-input transport evidence
+
+The isolated local OpenSSH integration test passed synthetic 1,024-, 10,240- and 51,200-byte UTF-8 payloads containing Chinese, Japanese, emoji, combining characters and newlines. It wrapped payloads in bracketed-paste delimiters, split writes every 31 bytes through TerminalInputPipe, and compared the server-side SHA-256 of the expected byte count before verifying shell input recovery. All three cases passed. This exercises queue/SSH/PTY byte preservation; it does not exercise Ghostty paste encoding, native composer behavior, mobile networks, or application interpretation of bracketed paste. Physical composer acceptance remains NOT TESTED.

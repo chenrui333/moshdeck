@@ -1,4 +1,5 @@
 #if os(macOS)
+    import Crypto
     import Darwin
     import Foundation
     import Testing
@@ -315,6 +316,45 @@
             await connection?.close()
             #expect(try tmux(["has-session", "-t", "=missing"]) != 0)
             #expect(try tmux(["has-session", "-t", "=retained"]) == 0)
+        }
+
+        @Test(arguments: [1024, 10 * 1024, 50 * 1024])
+        func largeUnicodeInputPreservesBytes(size: Int) async throws {
+            let fixture = try OpenSSHFixture()
+            try await fixture.start()
+            let output = ReceivedOutput()
+            let connection = try await SSHConnection.connect(
+                profile: fixture.profile, identity: fixture.identity, columns: 80, rows: 24,
+                output: { await output.append($0) })
+            let seed = Data("中文 日本語 👩🏽‍💻 e\u{301}\n".utf8)
+            var payload = Data()
+            while payload.count + seed.count <= size { payload.append(seed) }
+            payload.append(Data(repeating: 120, count: size - payload.count))
+            // Exercise the bytes a bracketed paste sends, including multibyte
+            // characters split between writes. This does not test Ghostty's encoder.
+            var wire = Data("\u{1b}[200~".utf8)
+            wire.append(payload)
+            wire.append(Data("\u{1b}[201~".utf8))
+            let expected = SHA256.hash(data: wire).map { String(format: "%02x", $0) }.joined()
+            let command = "stty raw -echo; printf 'INPUT_%s\\n' READY; "
+                + "/bin/dd bs=1 count=\(wire.count) 2>/dev/null | /usr/bin/shasum -a 256; "
+                + "stty sane; printf 'INPUT_%s\\n' DONE\r"
+            try await connection.send(Data(command.utf8))
+            try await output.waitFor("INPUT_READY")
+            let pipe = TerminalInputPipe(failed: { Issue.record("Synthetic paste write failed") })
+            pipe.bind { try await connection.send($0) }
+            for offset in stride(from: 0, to: wire.count, by: 31) {
+                pipe.enqueue(wire.subdata(in: offset..<min(offset + 31, wire.count)))
+            }
+            await pipe.waitForDrain()
+            try await output.waitFor("INPUT_DONE")
+            let result = await output.text()
+            #expect(result.contains(expected))
+            // A shell marker after raw mode verifies normal input recovers.
+            try await connection.send(Data("printf 'RECOVERED_%s\\n' SHELL\r".utf8))
+            try await output.waitFor("RECOVERED_SHELL")
+            pipe.stop()
+            await connection.close()
         }
 
         @Test func syntheticOutputThroughputAndInterrupt() async throws {

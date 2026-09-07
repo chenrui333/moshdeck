@@ -19,6 +19,8 @@ let package = Package(
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "Crypto", package: "swift-crypto"),
             ]),
-        .testTarget(name: "MoshDeckCoreTests", dependencies: ["MoshDeckCore"]),
+        .testTarget(
+            name: "MoshDeckCoreTests",
+            dependencies: ["MoshDeckCore", .product(name: "Crypto", package: "swift-crypto")]),
     ]
 )
