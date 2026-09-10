@@ -94,3 +94,18 @@ No BoringSSL object references were found in that app link map. No visible live 
 The embedded `SymbolsNerdFont-Regular.ttf` identifies Nerd Fonts 3.4.0 and Ryan McIntyre's copyright, but has no license/name-table records 13 or 14. `Spike/App/Notices/NerdFontComponents.txt` now includes the eight license files present under `src/glyphs` at release revision `fa7b859994228a9c8759f99c55a8d31ee92a1b5e`: codicons, Font Awesome, Material Design, Octicons, Pomicons, Powerline Extra, Powerline Symbols and Weather Icons. [nerd-font-notices.json](nerd-font-notices.json) records source hashes. This supplements the already bundled archive-level notice. Other glyph sources without license files in that directory still need attribution tracing; font metadata alone does not supply it.
 
 The Release linker map also attributes 12 live entries to `libghostty.a(compiler_rt.o)`, including Zig platform-version checks, integer conversion/division and stack-protection helpers. The Zig 0.16.0 toolchain used for the local reproduction supplies the MIT license copied unchanged to `Spike/App/Notices/Zig-MIT.txt`. Its SHA-256 is `5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177`. The signed Debug iPhone build passed and both new notice resources matched their source bytes. C++ and Apple runtime dynamic-library references are distinct from this statically included object; do not assume an external system-runtime reference means no compiler runtime is bundled.
+
+## Conditional libintl candidate — September 9
+
+An isolated arm64 iOS library build succeeded with `ZIG_BUILD_EXTRA_ARGS='-Di18n=false'` and [a small build patch](../../Spike/patches/ghostty-conditional-libintl.patch) that links/bundles libintl only when `self.config.i18n` is enabled. The option alone is insufficient: the pinned Apple-platform build path otherwise unconditionally includes the library. Upstream's existing disabled-i18n implementation skips gettext initialization and returns untranslated message IDs; terminal Unicode decoding and font rendering are separate facilities.
+
+The patch applies after the wrapper's existing patch stack to Ghostty core `c4e16970a803b170e352432424f44192cb59f3ac`. Reproduction uses the pinned wrapper checkout, its prepared Ghostty source, then:
+
+```sh
+# SOURCE is the isolated, already wrapper-patched Ghostty checkout.
+git -C "$SOURCE" apply "$MOSHDECK/Spike/patches/ghostty-conditional-libintl.patch"
+ZIG_BUILD_EXTRA_ARGS='-Di18n=false' ./Script/build-ghostty.sh \
+  "$SOURCE" aarch64-ios "$OUTPUT/device"
+```
+
+The resulting static archive is 19,183,568 bytes, SHA-256 `5a60347d16e0f64144ef73c578dc650a4b66d10f278c21645da3549d474f2aa2`. Its complete `nm -g` output contains zero matches for `libintl`, `bindtextdomain`, `dgettext`, `textdomain`, or `_libgettext`. This is candidate device-library evidence, not evidence about the currently pinned/shipped binary. A simulator build and consumer regression checks are pending. No app dependency pin, installed phone application or exported IPA was changed. Remaining dependency/resource obligations are independent of this candidate's gettext removal.
