@@ -4,9 +4,10 @@ This is an investigation harness, not the daily-use MVP. Read [architecture](../
 
 ## Build and local checks
 
-Requires Xcode 26.6 for the currently tested toolchain; targets iOS 18+. Dependency versions and transitive revisions are locked. No project generator is required.
+Requires an Apple Silicon Mac, Xcode 26.6 with its Metal toolchain, and Zig 0.16.0 for the currently tested dependency recipe; targets iOS 18+. Dependency versions and transitive revisions are locked. No project generator is required. Prepare the native dependency once per fresh checkout before opening/building the Xcode project:
 
 ```bash
+python3 Spike/scripts/prepare-ghostty.py
 swift test
 python3 Spike/scripts/check-tmux.py
 xcrun swift-format lint --strict --recursive Sources Tests Spike/App Spike/UITests Package.swift
@@ -14,6 +15,8 @@ xcodebuild build -project Spike/MoshDeckSpike.xcodeproj \
   -scheme MoshDeckSpike -destination 'generic/platform=iOS' \
   CODE_SIGNING_ALLOWED=NO
 ```
+
+The generated Swift package and XCFramework live in ignored `.build/ghostty-ios/package`. The project consumes that local package; it no longer downloads the upstream release XCFramework. The recipe uses exact upstream commits plus the checked-in conditional-libintl patch, disables gettext localization, and records provenance. It refuses to overwrite an existing build directory. See [dependency evidence](../docs/research/licenses.md) before upgrading.
 
 For runtime testing choose an available simulator/device destination in Xcode. An actual device build needs your development team/signing; no personal team is hardcoded into the project. The UI test runs the synthetic fixture and retains its screenshot in the result bundle. Never share whole Xcode diagnostic bundles without inspecting them for unrelated device data.
 
@@ -26,7 +29,7 @@ The host-managed Ghostty surface receives synthetic ANSI/UTF-8 data. The fixture
 ## SSH tab
 
 1. Enable the official Tailscale apps separately and ensure the Mac is awake with Remote Login configured for your user.
-2. Tap Unlock MoshDeck to authenticate once for a five-minute app session, then tap Unlock / show phone public key. The app creates a dedicated Ed25519 key in device-only, when-unlocked Keychain storage after device-owner authentication. Use the explicit Copy public key or Share public key button to transfer it; long-press selection is not required.
+2. Tap Unlock MoshDeck to authenticate for foreground use, with a five-minute inactive/background grace, then tap Unlock / show phone public key. The app creates a dedicated Ed25519 key in device-only, when-unlocked Keychain storage after device-owner authentication. Use the explicit Copy public key or Share public key button to transfer it; long-press selection is not required.
 3. Install that **public** key in the intended Mac account's authorized_keys using your normal trusted setup flow. Never copy the Mac's private keys to the phone.
 4. Obtain the Mac's OpenSSH **public host key** through a trusted local channel. Verify its SHA-256 fingerprint independently, then paste the full public key into the spike. Unknown or mismatching identities do not auto-enroll.
 5. Enter host, username and port. Begin with Authentication only, then Echo command and Clean interactive shell; enable tmux only after these succeed on the phone. Enter the tmux target. Start existing work in tmux on the Mac first. Create-if-absent is an explicit initial option; reconnect is attach-only.
@@ -40,8 +43,8 @@ The terminal transport has bounded queues, PTY resize, a foreground liveness che
 - No combined Paste + Enter until asynchronous paste confirmation completion is handled and tested. No command execution acknowledgement or exactly-once delivery claim.
 - Minimal key row; advanced keyboard mapping, text selection, hyperlinks, accessibility and sustained-output behavior still need the required acceptance tests.
 - Remote clipboard reads/writes and automatic URL detection are disabled. File/image drops are disabled; paste reads explicit text only. No terminal payload logs.
-- Software Ed25519 key, not Secure Enclave. Explicit app unlock grants a fixed five-minute grace period; network retries do not repeat Face ID during it.
-- No custom backend, embedded VPN, Mac daemon, Mosh, Codex API, notifications, TestFlight, file UI or production release workflow.
+- Software Ed25519 key, not Secure Enclave. App unlock stays valid throughout foreground use. Five minutes inactive/backgrounded requires authentication on return; network retries never invoke Face ID themselves.
+- No custom backend, embedded VPN, Mac daemon, Mosh, Codex API, notifications or file UI. TestFlight preparation is now authorized; production release and full daily-use acceptance remain incomplete.
 
 The physical Wi-Fi/cellular/lock and real iTerm2/agent tests are still required. A successful fixture does not establish a usable remote workflow.
 
