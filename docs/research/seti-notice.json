@@ -1,0 +1,7 @@
+{
+  "repository": "jesseweed/seti-ui",
+  "revision": "2d6c5e68b4ded73c92dac291845ee44e1182d511",
+  "path": "LICENSE.md",
+  "sha256": "d4d2d888c6a0a220a7b0e2d6013cf37539b0e05ef937002b3b33bdb364575b88",
+  "scope": "Seti upstream notice; Nerd Fonts identifies Seti and Original as sources for original-source.otf. This does not establish byte-identical individual SVG lineage."
+}
