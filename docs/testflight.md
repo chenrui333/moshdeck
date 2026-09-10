@@ -19,7 +19,7 @@ Archives, exported IPA, provisioning material and raw signing logs remain outsid
 1. Create the App Store Connect record with the existing bundle identifier after secure local web authentication. Do not put Apple passwords or two-factor codes in chat or repository files.
 2. Re-archive with the beta icon added after the initial export; that earlier IPA has no `CFBundleIcons` entry.
 3. Complete the encryption declaration for the actual SSH implementation; the archive does not set `ITSAppUsesNonExemptEncryption`.
-4. Resolve the documented static libintl distribution obligations and remaining dependency inventory in [licenses](research/licenses.md). Successful signing does not resolve these requirements.
+4. Integrate and validate the tested conditional-libintl candidate through a reproducible dependency path, or resolve the current artifact's static-link distribution obligations. The candidate passes device consumer build and two simulator fixtures, but the app still pins the original binary. Complete the remaining inventory in [licenses](research/licenses.md). Successful signing does not resolve these requirements.
 5. Rebuild/export the final source, verify distribution entitlements and signature, upload with `asc`, and inspect processing before assigning a tester group. Tester invitations are a separate explicit action.
 
 ## Initial beta scope
