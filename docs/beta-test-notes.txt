@@ -1,0 +1,18 @@
+MoshDeck 0.0.1 — early terminal beta
+
+Use your own SSH host. The tested setup is an awake Mac with Remote Login, official Tailscale on both devices, and an existing tmux session. Authorize this phone's public key and independently verify the Mac's host key. MoshDeck has no account or cloud backend and does not embed Tailscale.
+
+Start work inside tmux on the Mac. Configure the phone to attach to that same named session. An ordinary iTerm2 tab outside tmux cannot be adopted automatically. You can also attach iTerm2 to the shared session with: tmux attach-session -t SESSION_NAME
+
+Please test:
+- Unlock, connect, run harmless shell commands, and use Esc, Ctrl-C, Ctrl-B, Tab and arrows.
+- Dismiss the keyboard and expand/restore the terminal.
+- Compose a multiline prompt, dismiss/reopen it, and verify draft retention. Paste and Enter are separate actions; embedded newlines deserve care in a shell.
+- Switch apps, lock/unlock the phone, and change networks. Confirm recovery to the same tmux session and shell PID using echo $$.
+- Attach from iTerm2 and phone simultaneously. Detach either client with Ctrl-B then D; confirm the other remains usable. Do not use exit to test detachment.
+
+App unlock remains valid during foreground use. Five minutes inactive/backgrounded requires authentication on return. Reconnect must not replay offline keystrokes or create a replacement tmux session.
+
+This beta still exposes engineering controls and supports one saved profile. Full terminal compatibility, longer lock recovery and extended coding-agent use remain under evaluation. Mosh is not implemented.
+
+When reporting a failure, include the action, network transition, automatic/manual recovery, shell PID continuity and sanitized Copy Diagnostics output. Do not include private keys, prompts, terminal transcripts or screenshots containing secrets.
