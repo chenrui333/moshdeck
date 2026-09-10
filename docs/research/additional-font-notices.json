@@ -1,0 +1,36 @@
+{
+  "nerdFontsRevision": "fa7b859994228a9c8759f99c55a8d31ee92a1b5e",
+  "scope": "Additional component notices; Seti provenance remains separate",
+  "components": [
+    {
+      "repository": "Lukas-W/font-logos",
+      "revision": "e92426e28ee5bbf4ca328b33e3a393b7a5045f01",
+      "path": "LICENSE",
+      "licenseSHA256": "88d9b4eb60579c191ec391ca04c16130572d7eedc4a86daa58bf28c6e14c9bcd"
+    },
+    {
+      "repository": "devicons/devicon",
+      "revision": "6910f0503efdd315c8f9b858234310c06e04d9c0",
+      "path": "LICENSE",
+      "licenseSHA256": "121194741d4a915b9f5890fdd6dd95121f9b1f816517c792358d72d7c838d664"
+    },
+    {
+      "repository": "andrelzgava/font-awesome-extension",
+      "revision": "09d80249058ee8018a45da30add4339289dbb466",
+      "path": "LICENCE",
+      "licenseSHA256": "b47b15d771c4507a75ff65beca3a78168d6af4cca9b45177a1aa817139c64ba5",
+      "sourceFontMatchesVendoredBytes": true,
+      "upstreamFontSHA256": "b3c40985a8f23bbe450926e87b55fb3937b0aee742805ea4a6443242e224ea33",
+      "vendoredFontSHA256": "b3c40985a8f23bbe450926e87b55fb3937b0aee742805ea4a6443242e224ea33"
+    },
+    {
+      "repository": "jloughry/Unicode",
+      "revision": "805536fb6f93604da985d80e0c6b099f98f8b4d9",
+      "path": "LICENSE.txt",
+      "licenseSHA256": "11aef1cdf2d58d822e6857e2574870ccc59d4900052bf5c098e319d750e7ac3d",
+      "sourceFontMatchesVendoredBytes": true,
+      "upstreamFontSHA256": "6fac775371f33ea71d2136d5c516ea46287c8627576fb673de1a21bd1b0a7f89",
+      "vendoredFontSHA256": "6fac775371f33ea71d2136d5c516ea46287c8627576fb673de1a21bd1b0a7f89"
+    }
+  ]
+}
