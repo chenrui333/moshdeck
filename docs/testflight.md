@@ -17,7 +17,7 @@ Archives, exported IPA, provisioning material and raw signing logs remain outsid
 ## Before upload
 
 1. Create the App Store Connect record with the existing bundle identifier after secure local web authentication. Do not put Apple passwords or two-factor codes in chat or repository files.
-2. Add the required application icon; the archived application has no `CFBundleIcons` entry.
+2. Re-archive with the beta icon added after the initial export; that earlier IPA has no `CFBundleIcons` entry.
 3. Complete the encryption declaration for the actual SSH implementation; the archive does not set `ITSAppUsesNonExemptEncryption`.
 4. Resolve the documented static libintl distribution obligations and remaining dependency inventory in [licenses](research/licenses.md). Successful signing does not resolve these requirements.
 5. Rebuild/export the final source, verify distribution entitlements and signature, upload with `asc`, and inspect processing before assigning a tester group. Tester invitations are a separate explicit action.
@@ -27,3 +27,7 @@ Archives, exported IPA, provisioning material and raw signing logs remain outsid
 The tested remote workflow is official Tailscale, ordinary macOS OpenSSH, Ed25519 phone identity, strict host-key verification and an existing tmux session. Tailscale is the supported deployment recipe, not an embedded dependency or hard network requirement. Local-network or other VPN access may work through ordinary SSH but has not received the same device acceptance.
 
 What to Test should focus on connection setup, terminal input, composer, keyboard dismissal, background/lock recovery and preservation of the same tmux process. Keep the separate 20/60-minute lock, network-direction, termination, broader terminal and real coding-agent dogfood rows pending until observed. No backend, account system, Mosh transport or agent API is included.
+
+## Beta icon checkpoint
+
+Added an original geometric terminal icon and MoshDeck display name, preserving the bundle identifier. The reproducible generator is `Spike/scripts/generate-app-icon.swift`. Its initial 24-bit AppKit drawing context failed; the corrected generator uses a 32-bit Quartz context with no alpha channel. The resulting PNG is 1024×1024 and was visually inspected. A Release device-target build succeeded and its generated Info.plist contains both iPhone and iPad primary-icon entries. The earlier exported IPA has not been replaced or uploaded.
