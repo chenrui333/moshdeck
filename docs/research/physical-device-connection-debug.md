@@ -222,3 +222,18 @@ Retrieved sanitized device diagnostics still end with the background event at ep
 The retained earlier attempt `2657037A-0C95-4F60-9250-721A60BC9319` reached interactive output at 1788758375.847423. Its next recorded lifecycle event is `scene inactive` at 1788760057.160598: 1,681.313175 seconds (28 minutes 1.31 seconds). There is no intervening app-unlock, relock, or disconnect event in that attempt timeline. Together with the owner's earlier foreground-check report, this supports the foreground-no-expiry requirement. It does not measure continuous typing, responsiveness throughout the interval, or a locked-phone duration. Independent Mac metadata at inspection still showed pane `%0`, shell PID `89665`, 37×25.
 
 The following foreground-resume attempt `69866380` authenticated, allocated its PTY and received remote-command acceptance, but the channel closed before interactive output and the app returned to background. Do not count that attempt as a successful terminal recovery. Its close/background ordering is recorded without asserting a network root cause.
+
+## VPN reachability and confirmed recovery — September 9
+
+The owner reported repeated connection failures. Attempts through `6DA8E575` closed at `negotiatingSSH` with `disconnected`, before host verification or authentication. At initial inspection the Mac's SSH port accepted local and tailnet-address connections, while Tailscale reported the phone offline and a tailnet ping timed out. This supports investigating VPN availability first; it does not prove the exact cause of each channel closure. No keys or server configuration were changed.
+
+On subsequent inspection Tailscale showed the phone online and answered a ping via DERP in 179 ms. This sample used a relay and did not establish a direct peer path. Retrieved device diagnostics showed two successful foreground-resume attempts:
+
+| Attempt | Attempt to interactive output | Result |
+| --- | --- | --- |
+| `5202819B` | 2.032 s | Host matched, public-key authentication succeeded, PTY allocated, tmux command accepted, interactive output received |
+| `442A53B1` | 2.229 s | Same complete startup sequence; connected at diagnostic capture |
+
+Both attempts reused the valid app unlock without another authentication request. The second followed roughly four minutes inactive/backgrounded, within the five-minute grace. The owner confirmed connecting and that it worked fine. Independent Mac metadata still showed pane `%0`, shell PID `89665`, running zsh. The original server-side shell survived; no replacement session was created for this investigation.
+
+This is a confirmed recovery after the reported connectivity problem, not a controlled 20/60-minute lock, network-direction, draft-retention or typing-latency test. The exact moment VPN reachability returned is unavailable. The initial failures therefore remain correlated with unavailable VPN connectivity rather than a proven SSH-library defect.
