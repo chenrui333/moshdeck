@@ -1,8 +1,21 @@
-# TestFlight preparation
+# TestFlight beta
 
 On September 9, the owner authorized preparing a TestFlight beta using `asc`, with further physical acceptance collected through beta testing. This does not mark the daily-use MVP or the remaining lifecycle matrix complete. Git pushes and production App Store submission are not part of this checkpoint.
 
-## Current checkpoint
+## Current distribution — September 12, 2026
+
+Version **0.0.1 (1)** is uploaded, processed **VALID**, and **IN_BETA_TESTING** for the internal **Personal Beta** group. The owner is the sole tester and is **INVITED**; installation through TestFlight has not yet been confirmed. External state is **READY_FOR_BETA_SUBMISSION**: no external beta review or public invitation link exists yet.
+
+- App Store Connect app: `6811461068`.
+- Build: `5aaca512-d147-4f90-9bdd-9b3c6ae0c875`.
+- Internal group: `ed5379bd-32f5-4e5c-a22e-626df71dd3a0`.
+- Uploaded IPA SHA-256: `e210f61cd329ddb43ae012cc17447f6f193141b1e3c790121b563509be498142` (notice-inclusive archive after `5000793`).
+- What to Test: [beta-test-notes.txt](beta-test-notes.txt), en-US localization saved and verified by the API response.
+- Encryption metadata: `usesNonExemptEncryption=false`, accepted by App Store Connect. The declaration uses the audited Apple-platform CryptoKit implementation described below and Apple's OS-provided encryption documentation category. Tailscale is external to this app. The build Info.plist remains unchanged; the declaration was recorded on the processed build.
+
+Readbacks confirmed the build/group relationship and internal testing state. No production App Store submission or Git push was performed. This distribution checkpoint does not complete the remaining physical acceptance matrix. Historical preparation notes below describe superseded artifacts and earlier gates.
+
+## Initial preparation checkpoint — September 9
 
 - Source: `29f459b`; version 0.0.1, build 1.
 - Bundle identifier: `com.chenrui333.MoshDeckSpike`, retained to preserve the existing application identity.
@@ -14,7 +27,7 @@ On September 9, the owner authorized preparing a TestFlight beta using `asc`, wi
 
 Archives, exported IPA, provisioning material and raw signing logs remain outside Git. The installed physical-phone build was not replaced during this preparation.
 
-## Before upload
+## Original pre-upload checklist (completed; retained as history)
 
 1. Create the App Store Connect record with the existing bundle identifier after secure local web authentication. Do not put Apple passwords or two-factor codes in chat or repository files.
 2. Re-archive with the beta icon added after the initial export; that earlier IPA has no `CFBundleIcons` entry.
