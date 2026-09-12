@@ -4,3 +4,7 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 *.xcresult/
+
+# Local website browser verification artifacts
+.playwright-cli/
+output/playwright/

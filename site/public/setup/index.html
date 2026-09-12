@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Beta setup — MoshDeck</title><meta name="description" content="Set up Tailscale, Mac Remote Login, phone SSH identity and a shared tmux session for the MoshDeck beta."><meta name="theme-color" content="#101918"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/style.css"></head>
+<body>
+<a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/"><span>&gt;_</span> MoshDeck</a><nav aria-label="Main"><a href="/setup/">Beta setup</a><a href="/support/">Support</a></nav></header>
+<main id="main" class="doc">
+<div class="eyebrow">Beta field guide</div><h1>From your desk<br>to your phone.</h1><p class="lead">Set this up while you’re at your Mac. First prove a shared shell works; then bring your coding tools into that session.</p>
+
+<div class="callout"><strong>Before you start</strong><p>An invite to MoshDeck in Apple TestFlight, an iPhone on iOS 18+, your own awake Mac, and permission to configure SSH for your Mac user. There is no public beta link yet. Use the invitation sent by the maintainer.</p>
+</div>
+<nav class="toc" aria-label="Setup steps"><a href="#network">01 Network</a><a href="#mac">02 Mac</a><a href="#keys">03 Keys</a><a href="#profile">04 Profile</a><a href="#first-test">05 Shared session</a><a href="#recovery">06 Recovery</a></nav>
+<section id="network"><h2>01 / Put both devices on your network.</h2><p>Install the official <a href="https://tailscale.com/download">Tailscale apps</a> on Mac and iPhone. Sign both into your own tailnet, finish the VPN permissions, and check that both devices appear connected. Keep the iPhone VPN enabled.</p>
+<p>On Mac, use either the official standalone app or Mac App Store app; install one variant. Follow <a href="https://tailscale.com/docs/install/mac">Tailscale’s Mac guide</a>. Copy your Mac’s Tailscale IP or full MagicDNS hostname for the phone profile.</p>
+<p><strong>Is Tailscale mandatory?</strong> MoshDeck opens an ordinary SSH connection. A reachable local network or another VPN can work, but Tailscale is the beta’s tested remote-access recipe. Each tester uses their own devices and tailnet. No public port forwarding is needed.</p>
+</section>
+
+<section id="mac"><h2>02 / Prepare the Mac.</h2><p>In System Settings → General → Sharing, turn on <strong>Remote Login</strong> and allow your Mac user. Remote Management and Remote Apple Events are not needed. See <a href="https://support.apple.com/guide/mac-help/mchlp1066/mac">Apple’s Remote Login guide</a>.</p>
+<p>Keep the Mac awake and connected while testing. A sleeping or powered-off Mac is unavailable; MoshDeck cannot wake it remotely.</p>
+<p>In iTerm2 or Terminal, get your short username and install tmux if needed. The install command assumes <a href="https://brew.sh/">Homebrew</a> is already installed.</p>
+<pre class="code"><code>whoami
+brew install tmux
+command -v tmux
+tmux new-session -A -s work</code></pre><p>Save the username and full tmux path printed above. Leave this shell running inside <code>work</code>. Start persistent tools here, not in an unrelated iTerm2 tab.</p>
+</section>
+
+<section id="keys"><h2>03 / Authorize the phone. Verify the Mac.</h2><p>Open MoshDeck → <strong>SSH</strong> → <strong>Unlock MoshDeck</strong>. Complete device authentication. Tap <strong>Unlock / show phone public key</strong>, then <strong>Copy public key</strong> or <strong>Share public key</strong>. Transfer that public key to your own Mac using a trusted method, such as AirDrop.</p>
+<p>On the Mac, create the SSH folder if needed, then open the authorized-keys file:</p>
+<pre class="code"><code>mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+touch ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+nano ~/.ssh/authorized_keys</code></pre><p>Append the phone’s complete <code>ssh-ed25519 …</code> public-key line on its own line. Preserve existing keys. Save with Ctrl-O, Enter, then Ctrl-X. The phone’s private key stays on the phone.</p>
+<p>Now obtain the <strong>Mac’s host public key</strong> directly on the Mac:</p>
+<pre class="code"><code>cat /etc/ssh/ssh_host_ed25519_key.pub
+ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub</code></pre><p>Transfer the public-key line to the phone through a trusted channel. This is a different key: it identifies the Mac to MoshDeck. The profile needs the full <code>ssh-ed25519 …</code> line, not just the SHA256 fingerprint. Never copy the similarly named file without <code>.pub</code>.</p>
+</section>
+
+<section id="profile"><h2>04 / Fill in the SSH profile.</h2><div class="table-wrap"><table><thead><tr><th>Current beta field</th><th>What to enter</th></tr></thead><tbody><tr><td>Tailnet hostname or IP</td><td>Your Mac’s actual Tailscale address</td></tr><tr><td>Mac username</td><td>The output of <code>whoami</code></td></tr><tr><td>Port</td><td><code>22</code></td></tr><tr><td>Verified OpenSSH host public key</td><td>The Mac’s full host public-key line from step 03</td></tr><tr><td>Use tmux</td><td>On</td></tr><tr><td>Session</td><td><code>work</code></td></tr><tr><td>tmux executable</td><td>The full path from <code>command -v tmux</code></td></tr><tr><td>Create if absent on first connect</td><td>Off for this shared-session test</td></tr></tbody></table></div><p>Tap <strong>Connect</strong>. You should see connection progress and then your existing shell. If it fails, open <a href="/support/">troubleshooting</a>; do not bypass host verification.</p>
+</section>
+
+<section id="first-test"><h2>05 / Prove it’s the same session.</h2><p>Inside the tmux shell on Mac, run:</p>
+<pre class="code"><code>echo $$</code></pre><p>Run it again from the phone at that same shell prompt. The PID should match. Type <code>echo hello</code> from either device and confirm the output appears on both. Different terminal widths can resize or reflow the shared pane.</p>
+<p>From another ordinary iTerm2 tab, you can attach with:</p>
+<pre class="code"><code>tmux attach-session -t work</code></pre><p><strong>Detach with Ctrl-B, then D.</strong> This removes only that client. Do not use <code>exit</code> for this check: it exits the shell. See the <a href="https://github.com/tmux/tmux/wiki/Getting-Started">tmux getting-started guide</a>.</p>
+<p>Once the shell test passes, launch your usual coding CLI inside this tmux session. MoshDeck controls it as a terminal; it cannot adopt a process already running outside tmux. Don’t compare <code>echo $$</code> from different panes, since each pane has its own shell.</p>
+</section>
+
+<section id="recovery"><h2>06 / Try a short recovery check.</h2><ol><li>Note the shell PID and leave a harmless draft in the composer.</li><li>Switch apps for 30 seconds, return, and check the terminal and draft.</li><li>Lock the phone for six minutes, return, unlock MoshDeck if asked, and check the same shell PID.</li><li>Try Wi-Fi → cellular. Record whether recovery is automatic or needs Connect.</li></ol><p>Foreground use stays unlocked. Five minutes inactive/backgrounded requires authentication on return. Explicit <strong>Lock</strong> covers the terminal and closes SSH; your tmux session stays on the Mac.</p>
+<p>During a known disconnect, raw input and sending are disabled. Composer drafts stay local. Recovery attaches to the existing tmux session and must not create a replacement if it is gone. Mac reboots and an exited tmux session cannot be recovered.</p>
+<p>Use disposable commands for beta tests. Extended locks, terminal compatibility and coding-agent comfort are still being evaluated. <a href="/support/#feedback">Send useful feedback →</a></p>
+</section>
+</main>
+<footer><span>MoshDeck · Early iPhone beta</span><div><a href="/setup/">Setup</a><a href="/privacy/">Privacy</a><a href="/support/">Support</a></div></footer>
+</body></html>

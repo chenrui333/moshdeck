@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MoshDeck — Your terminal, within reach.</title><meta name="description" content="Raw remote control for your Mac development terminal from iPhone. SSH, tmux, and a keyboard that goes with you."><meta name="theme-color" content="#101918"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/style.css"></head>
+<body>
+<a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/"><span>&gt;_</span> MoshDeck</a><nav aria-label="Main"><a href="/setup/">Beta setup</a><a href="/support/">Support</a></nav></header>
+<main id="main">
+<section class="hero"><div><div class="eyebrow">iPhone terminal / early beta</div><h1>Leave the desk.<br><em>Keep the session.</em></h1><p class="lead">Your Mac does the work. Your iPhone gives you raw control of the terminal you left running.</p>
+<a class="button" href="/setup/">Set up your beta →</a><p class="aside">Invite-only access · iOS 18 or later</p>
+</div><div><div class="terminal" aria-label="Illustrative shared terminal session"><div class="terminal-title"><span>work · MacBook</span><span class="green">● attached</span></div><pre><span class="green">~ $</span> tmux attach-session -t work
+
+<span class="green">work $</span> echo "hello from my phone"
+hello from my phone
+
+<span class="green">work $</span> echo $$
+48216
+
+<span class="green">work $ ▌</span></pre><div class="terminal-foot">Esc &nbsp; Ctrl-C &nbsp; Ctrl-B &nbsp; Compose</div></div><p class="aside">Illustration of the workflow, not an app screenshot.</p>
+</div></section>
+
+<div class="route" aria-label="Connection architecture"><strong>iPhone</strong><span>→ SSH over Tailscale →</span><strong>Your Mac</strong><span>→ tmux →</span><strong>Your tools</strong></div>
+<section class="section"><div class="columns"><article><span class="number">01 / CONTINUITY</span><h2>One place for the work.</h2><p>Attach your Mac terminal and phone to the same tmux session. Your shell and long-running tools stay on the Mac.</p>
+</article><article><span class="number">02 / CONTROL</span><h2>A real terminal.</h2><p>Shell commands, full-screen tools, Escape and Ctrl-C. Use the native multiline composer for longer instructions.</p>
+</article><article><span class="number">03 / SIMPLICITY</span><h2>Your own connection.</h2><p>Ordinary SSH with verified host keys. The tested setup uses the official Tailscale apps. No MoshDeck account or cloud relay.</p>
+</article></div></section>
+
+<section class="section"><div class="eyebrow">What to expect</div><h2>A small utility, still taking shape.</h2><p class="lead">Physical iPhone SSH/tmux access and recovery work. We’re testing longer sessions, mobile network transitions and everyday terminal tools. Expect rough edges and diagnostic controls.</p>
+<p>The current beta has one saved profile and one active terminal. Mosh transport and agent-specific features are not included.</p>
+<a href="/setup/#first-test">Start with the shared-session check →</a></section>
+</main>
+<footer><span>MoshDeck · Early iPhone beta</span><div><a href="/setup/">Setup</a><a href="/privacy/">Privacy</a><a href="/support/">Support</a></div></footer>
+</body></html>

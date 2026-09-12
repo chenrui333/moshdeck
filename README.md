@@ -7,7 +7,8 @@ Status: daily-use MVP implementation. The physical SSH/tmux feasibility spike wo
 The accepted architecture uses GhosttyTerminal, ordinary SSH over the official Tailscale VPN, and tmux for Mac/iPhone session continuity. Mosh is not an initial requirement. No custom backend or agent-specific protocol is planned.
 
 - [Build the development app](Spike/README.md)
-- [TestFlight preparation](docs/testflight.md)
+- [TestFlight beta status](docs/testflight.md)
+- [Website and beta setup guide](site/README.md)
 - [Daily-use MVP and prerequisites](docs/mvp.md)
 - [Terminal compatibility](docs/research/terminal-compatibility.md)
 - [Performance observations](docs/research/performance.md)

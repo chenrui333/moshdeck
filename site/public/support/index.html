@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Support — MoshDeck</title><meta name="description" content="Troubleshoot MoshDeck beta connections and share sanitized feedback."><meta name="theme-color" content="#101918"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/style.css"></head>
+<body>
+<a class="skip" href="#main">Skip to content</a><header><a class="brand" href="/"><span>&gt;_</span> MoshDeck</a><nav aria-label="Main"><a href="/setup/">Beta setup</a><a href="/support/">Support</a></nav></header>
+<main id="main" class="doc"><div class="eyebrow">Support / early beta</div><h1>Find the failing step.</h1><p class="lead">Start with the connection stage in Details or Copy Diagnostics. Unlocking the app and authenticating to your Mac are separate steps.</p>
+
+<details open><summary>Connect fails before authentication</summary><p>Check that the Mac is awake, both Tailscale apps show connected, and the phone profile has the Mac’s correct address and port 22. Confirm Remote Login is enabled for your user. A Wi-Fi/cellular transition may temporarily interrupt the path.</p>
+</details>
+<details><summary>The Mac rejects the phone key</summary><p>Check the short Mac username. Confirm the exact public key shown on this phone is a single complete line in that user’s ~/.ssh/authorized_keys. Keep the folder permission 700 and the file permission 600. Never send a private key with a bug report.</p>
+</details>
+<details><summary>Host verification fails</summary><p>Compare the configured host key with /etc/ssh/ssh_host_ed25519_key.pub directly on the intended Mac. A changed key may mean a rebuilt Mac, a wrong address or an untrusted connection. Verify the cause before updating the profile.</p>
+</details>
+<details><summary>tmux is missing, or the session is gone</summary><p>On Mac, run <code>command -v tmux</code> and <code>tmux list-sessions</code>. Match the executable path and session name in the phone profile. If the original session ended, creating a new session is an explicit fresh start; it does not restore the old process.</p>
+</details>
+<details><summary>Mac and phone show different work</summary><p>Both clients must attach to the same tmux session and pane. An ordinary iTerm2 tab outside tmux is separate. Follow the <a href="/setup/#first-test">shared-session check</a>. Different client sizes can change the pane’s layout.</p>
+</details>
+<details><summary>The keyboard hides controls</summary><p>Use the terminal’s keyboard dismissal control, or restore the terminal from expanded mode. The early beta still has Fixture and SSH tabs. Choose SSH for remote work.</p>
+</details>
+<section id="feedback"><h2>Report the sequence, not your secrets.</h2><p>Use <strong>Send Beta Feedback</strong> in TestFlight, or reply to the maintainer who invited you. Include:</p>
+<ul><li>App build, iPhone model and iOS version.</li><li>The action and connection stage that failed.</li><li>Network transition, time to recovery, and automatic versus manual reconnect.</li><li>Whether the same shell PID and composer draft survived.</li><li>Sanitized Copy Diagnostics output, reviewed before sending.</li></ul><p>Do not include private keys, passwords, prompts, terminal transcripts or screenshots showing secrets. Diagnostics are designed to omit terminal bytes; still review them for host information before sharing.</p>
+</section>
+</main>
+<footer><span>MoshDeck · Early iPhone beta</span><div><a href="/setup/">Setup</a><a href="/privacy/">Privacy</a><a href="/support/">Support</a></div></footer>
+</body></html>
