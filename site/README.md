@@ -35,3 +35,7 @@ The setup guide links current primary documentation for macOS Remote Login, Tail
 ## Local verification — September 12, 2026
 
 Desktop (1440px) and phone (390px) landing-page screenshots were visually reviewed. The setup call-to-action navigated correctly; the setup page had no horizontal overflow at 390px. Support disclosure toggling passed at 390px, and support layout had no horizontal overflow at 320px. Browser console reported zero errors or warnings. All five pages' local asset, page and fragment links resolve. The local preview returns 404 for an unknown URL. Live Cloudflare headers, custom-domain TLS and actual iPhone Safari checks remain pending publication.
+
+First-launch source audit: Release starts on SSH and has blank host, username and trusted host key. Environment profile overrides are Debug-only. The current default has Use tmux off and session `moshdeck-spike`; the published setup explicitly overrides both to the prepared `work` session. This source audit is not a fresh-install physical TestFlight pass.
+
+Cloudflare Pages local emulation also passed: the four public pages return 200, an unknown path serves the custom 404, and CSP/nosniff headers are present. Under those headers, the setup page loads its stylesheet, fits a 320px viewport and reports no browser errors. This verifies local hosting behavior only; cloud authentication and live deployment remain pending.

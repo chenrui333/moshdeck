@@ -1,6 +1,6 @@
 # Daily-use MVP
 
-Status: implementation in progress, September 7, 2026. The owner accepted the physical feasibility spike. Its code and evidence are preserved in local commits 44a114c, 938b1cc and d317f1d. This document defines the new implementation phase; historical spike reports retain their original observations.
+Status: implementation in progress; internal TestFlight beta available September 12, 2026. The owner accepted the physical feasibility spike. Its code and evidence are preserved in local commits 44a114c, 938b1cc and d317f1d. Version 0.0.1 (1) is in internal beta testing for the owner; this is not completion of daily-use acceptance. See [TestFlight status](testflight.md) and the [beta setup website](../site/README.md). This document defines the new implementation phase; historical spike reports retain their original observations.
 
 ## Supported workflow
 
@@ -36,7 +36,7 @@ Ed25519 identity, supplied known host key, macOS OpenSSH, hostname/IP over Tails
 | Terminal fidelity | Synthetic parser/input and shell/tmux evidence; broad app checks pending | Actual CLI and Codex control without major blockers |
 | Input UX | Spike composer/keys/dismissal retained; further hardening pending | Modifiers, large paste, Unicode and no offline replay |
 | Performance | Connection/recovery samples and unsigned Release size recorded; device resources pending | Several current-device samples and meaningful resource observation |
-| Security/provenance | Source reproduction and consumer/simulator checks passed; first-party audit and substantial notices recorded; copyleft/glyph review and physical artifact qualification pending | No known beta-blocking defect; reproducible dependency evidence |
+| Security/provenance | Pinned source preparation, consumer/simulator checks, gettext-free Release linkage and notice-inclusive distribution export passed; Apple accepted the internal beta. Physical qualification of this artifact and ongoing dependency review remain | No known beta-blocking defect; reproducible dependency evidence |
 | Product cleanup | Engineering harness still visible | Minimal profiles, terminal, composer, details and lock |
 | Codex dogfood | Not performed | Meaningful phone-only work interval and actual iTerm2 handoff |
 

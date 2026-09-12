@@ -8,3 +8,6 @@ xcuserdata/
 # Local website browser verification artifacts
 .playwright-cli/
 output/playwright/
+
+# Cloudflare local preview state
+.wrangler/
