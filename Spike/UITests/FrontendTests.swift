@@ -101,6 +101,10 @@ final class FrontendTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(key.frame.height, 44)
             key.tap()
         }
+        let keyboardScreenshot = XCTAttachment(screenshot: app.screenshot())
+        keyboardScreenshot.name = "Synthetic terminal with consolidated accessory"
+        keyboardScreenshot.lifetime = .keepAlways
+        add(keyboardScreenshot)
         control.tap()
         app.buttons["Hide Keyboard"].tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
