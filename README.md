@@ -25,6 +25,7 @@ The accepted architecture uses GhosttyTerminal, ordinary SSH over the official T
 - [Connection lifecycle](docs/research/connection-lifecycle.md)
 - [Physical connection debugging](docs/research/physical-device-connection-debug.md)
 - [UX debugging handoff](docs/research/ux-debug-handoff.md)
+- [iPhone layout research and recommendation](docs/research/layout.md)
 - [Actual results and open gates](docs/research/spike-results.md)
 
 The [development app](Spike/README.md) has physical-iPhone SSH/tmux, command input and automatic recovery evidence. Longer lock/outage, broad terminal application and Codex dogfood tests remain acceptance gates; see the current matrices before relying on a specific capability.
