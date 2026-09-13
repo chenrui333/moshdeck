@@ -92,3 +92,60 @@ Keep the fixture for terminal regressions: parser behavior, alternate screen, Un
 Compare old and new terminal row counts on the same physical phone, font and keyboard state. Accept the change only if it increases useful terminal space while the user can find Mac attachment, switching, composer and keyboard dismissal without verbal coaching. Measure action count and observed errors rather than claiming the mockup is the “best” layout before use.
 
 No native tabs, split panes, file browser, agent dashboard, theme system, Mosh, companion or backend is introduced by this recommendation.
+
+## Implementation checkpoint — September 12, 2026
+
+**LAYOUT IMPLEMENTED — PHYSICAL VALIDATION PENDING.** Implementation commits: `59903a9` (Release fixture exclusion), `1216a37` (keyboard consolidation), `c90efdd` (compact context, menus and presentation). The initial research above remains rationale; it is not physical acceptance evidence.
+
+Implemented:
+
+- Release opens the app-lock/SSH surface directly. Fixture code and the Fixture/SSH tab bar compile only in Debug. Authentication/echo diagnostic profile choices are also Debug-only; ordinary shell startup choices remain available in Release.
+- One host/status header replaces the stacked status/help/diagnostics/lock controls. Connected status is compact. Host truncation is visual only; full host, username, port and **Reconnect target** appear in Connection Details.
+- Compose remains a direct, VoiceOver-labelled action. Its native editor, Keychain draft path, explicit paste confirmation and separate Enter action remain. Draft editing is available while unlocked and disconnected; sending still uses the existing live-state guards.
+- The tmux menu sends Ctrl-B followed by lowercase s through Ghostty's key API, exposes Ctrl-B alone, labels the saved reconnect target honestly and links Mac attachment help. Actions are synchronous, deliberate and live-gated. No session query, control-mode client, shell-command paste or delayed input was added. Custom prefixes remain manual.
+- Overflow contains Connection Details, Profile / Settings, Copy Diagnostics, Disconnect and Lock app. Profile editing requires stopping the active connection first. Disconnect and Lock retain their separate existing methods and intent semantics.
+- A single UIKit input accessory replaces the wrapper's visible default accessory and the separate permanent Esc/Ctrl-C/Ctrl-B row. It contains Escape, sticky Ctrl, Tab, four arrows and Hide Keyboard. Buttons have at least 44-point interaction targets; Escape and dismissal stay at the edges, and the middle region can scroll horizontally on narrow displays. The accessory is 48 points high.
+- Sticky Ctrl uses the existing Ghostty state machine and public change callback. Armed/locked state is visible and exposed as an accessibility value. Existing focus-loss reset remains. Key buttons consult the existing live state before dispatch; the transport/input pipe is unchanged.
+- A Show Keyboard header action appears when terminal focus is dismissed. The normal expansion control is removed. Tapping the live terminal also uses its existing focus behavior.
+- Reconnect retains the same displayed surface until the existing lifecycle promotes a replacement. Progress/Cancel or failure/Retry/Details appear compactly above it. The existing `.id(ObjectIdentifier(terminal))`, byte stream, resize callbacks, authentication policy, retry rules and attach-only recovery remain intact.
+
+### Local verification
+
+| Check | Result | Scope |
+| --- | --- | --- |
+| Release startup, no fixture navigation, locked profile | PASS: 1 named simulator UI test, zero failures | Executed in Release, not a skipped Debug selector; repeated after header implementation |
+| Debug fixture parser/input, app-lock setup, composer background retention, accessory interaction | PASS: 4 named simulator UI tests, zero failures | Includes a 30-second synthetic composer background test |
+| Accessory bytes | PASS within the UI test | Actual button taps and Ctrl+c produced the expected control/escape/Tab/arrow bytes in the synthetic session; no remote transcript captured |
+| Ctrl and focus | PASS within the UI test | One-shot activation clears after c; armed state clears after dismissal and reopening |
+| Keyboard/rotation | PASS within the UI test | Three repeated hide/show cycles and landscape hide/show; button hit bounds checked at 44 points minimum |
+| Lifecycle, app-lock, input pipe | PASS: 21 selected tests in 3 suites | Includes stopped-attempt/offline replay and first-failure/attempt ownership coverage; no core implementation changes |
+| tmux command/generation rules | PASS: 4 tests, including 7 invalid-name cases | Attach-only recovery, command quoting and generation-bound paste/reconnect |
+| Changed Swift files | Strict swift-format lint and `git diff --check` PASS | Composer sheet content made an explicit closure argument to resolve the previous formatter warning, without changing dismissal persistence |
+| Signed physical-device Release build | BUILD SUCCEEDED; strict signature verification passed | Installed version 0.0.1 (2), source `c90efdd`, on the paired iPhone 15 Pro Max |
+| Physical launch | NOT TESTED | Automated launch was refused by iOS because the phone was locked; installation success does not prove runtime acceptance |
+
+The first Release simulator invocation requested Intel slices that the source-built Ghostty artifact does not contain and failed at link. The supported arm64 simulator invocation with `ONLY_ACTIVE_ARCH=YES` passed. This is a build-command correction, not an architecture or dependency change.
+
+### Physical acceptance and viewport record
+
+The previous installed phone build was 0.0.1 (1). A baseline estimate was requested before replacement, but no before/after row counts have been reported at this checkpoint. Do not infer phone height from a simulator, a tmux client size with unknown keyboard state, or the wireframe.
+
+| Phone state, composer closed | Before | After |
+| --- | --- | --- |
+| Keyboard hidden | NOT MEASURED | NOT MEASURED |
+| Keyboard visible | NOT MEASURED | NOT MEASURED |
+
+Source-level improvement: Release removes the tab bar, global expansion/dismissal bar, permanent diagnostics/lock/help stack and duplicate terminal action row. The 48-point accessory replaces the wrapper's 52-point row. The terminal-space benefit still needs measurement on the actual phone at the same font size, orientation and keyboard state.
+
+| Physical iPhone 15 Pro Max workload | Result | Remaining observation |
+| --- | --- | --- |
+| Shell | NOT TESTED | Commands, readable output, scrollback, viewport height |
+| Codex | NOT TESTED | Streaming, long composer prompt, Ctrl-C and readability |
+| tmux/shared Mac | NOT TESTED | Menu switch, two sessions, both-client input and detach survival |
+| Keyboard | NOT TESTED | Repeated hide/show, clipping, focus, portrait/landscape PTY resize |
+| Composer | NOT TESTED | Draft retention, native/CJK editing, paste and separate Enter |
+| Reconnect | NOT TESTED | Screen retention, visible state, disabled sending, successful recovery |
+
+No connection/input regression appeared in the executed local checks. Physical regression status is unverified. VoiceOver reading order, larger Dynamic Type with the full connected header, hardware-keyboard presentation and narrow-width accessory scrolling still require use on a device. No further visual redesign is justified until those observations arrive.
+
+The earlier exported build-2 archive predates these changes and must not be uploaded as this layout beta. A new distribution archive/export is required after the chosen acceptance checkpoint; the installed development-signed Release app is not a TestFlight upload.

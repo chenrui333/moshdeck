@@ -28,14 +28,14 @@ Release builds open the authenticated SSH screen directly and do not compile the
 
 The host-managed Ghostty surface receives synthetic ANSI/UTF-8 data. The fixture checks split input, alternate-screen restoration, Ctrl-C, bracketed large paste, and a distinct Enter key. The screenshot helps assess actual rendering but does not certify the full terminal-correctness matrix. No network or credentials are used by this tab.
 
-## SSH tab
+## Remote terminal (SSH tab in Debug)
 
 1. Enable the official Tailscale apps separately and ensure the Mac is awake with Remote Login configured for your user.
 2. Tap Unlock MoshDeck to authenticate for foreground use, with a five-minute inactive/background grace, then tap Unlock / show phone public key. The app creates a dedicated Ed25519 key in device-only, when-unlocked Keychain storage after device-owner authentication. Use the explicit Copy public key or Share public key button to transfer it; long-press selection is not required.
 3. Install that **public** key in the intended Mac account's authorized_keys using your normal trusted setup flow. Never copy the Mac's private keys to the phone.
 4. Obtain the Mac's OpenSSH **public host key** through a trusted local channel. Verify its SHA-256 fingerprint independently, then paste the full public key into the spike. Unknown or mismatching identities do not auto-enroll.
-5. Enter host, username and port. Begin with Authentication only, then Echo command and Clean interactive shell; enable tmux only after these succeed on the phone. Enter the tmux target. Start existing work in tmux on the Mac first. Create-if-absent is an explicit initial option; reconnect is attach-only.
-6. Connect, exercise raw keys and use the composer. The spike exposes Paste and a separate Enter key, with a multiline warning. It never resends failed writes automatically.
+5. Enter host, username and port. In Debug, Authentication only and Echo command isolate startup before Clean interactive shell; these probes are excluded from the Release form. Enter the tmux target. Start existing work in tmux on the Mac first. Create-if-absent is an explicit initial option; reconnect is attach-only.
+6. Connect. The compact header provides tmux actions, Compose and an overflow menu for details, diagnostics, Disconnect and Lock. The keyboard accessory provides Esc, sticky Ctrl, Tab, arrows and Hide Keyboard. Compose exposes Paste and a separate Enter key, with a multiline warning. It never resends failed writes automatically.
 
 The terminal transport has bounded queues, PTY resize, a foreground liveness check, structured stages and attempt-owned callbacks. Copy Diagnostics exports sanitized attempt timelines. See [lifecycle policy](../docs/research/connection-lifecycle.md). Backgrounding closes the connection and returning attempts a fresh authenticated attach. Runtime interruption schedules at most five foreground retries while the app remains unlocked. Initial and permanent failures require explicit retry. Wi-Fi/cellular recovery still needs physical measurement.
 

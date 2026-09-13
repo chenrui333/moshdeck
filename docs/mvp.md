@@ -37,12 +37,12 @@ Ed25519 identity, supplied known host key, macOS OpenSSH, hostname/IP over Tails
 | Input UX | Spike composer/keys/dismissal retained; further hardening pending | Modifiers, large paste, Unicode and no offline replay |
 | Performance | Connection/recovery samples and unsigned Release size recorded; device resources pending | Several current-device samples and meaningful resource observation |
 | Security/provenance | Pinned source preparation, consumer/simulator checks, gettext-free Release linkage and notice-inclusive distribution export passed; Apple accepted the internal beta. Physical qualification of this artifact and ongoing dependency review remain | No known beta-blocking defect; reproducible dependency evidence |
-| Product cleanup | Engineering harness still visible | Minimal profiles, terminal, composer, details and lock |
+| Product cleanup | Compact Release terminal/header and keyboard accessory implemented; physical layout acceptance pending | Minimal profiles, terminal, composer, details and lock |
 | Codex dogfood | Not performed | Meaningful phone-only work interval and actual iTerm2 handoff |
 
 ## Known limitations
 
-The installed/debug harness name and bundle identity remain stable to preserve the authorized Keychain identity. Current UI still exposes fixture/diagnostic controls. Only one saved-profile model exists so far; multiple profiles and identity selection are not yet complete. Local renderer scrollback is replaced on successful reattach; remote tmux history remains available through copy mode. Input delivered before an undetected network loss may have ambiguous delivery; it is never automatically resent on a new connection.
+The installed/debug harness name and bundle identity remain stable to preserve the authorized Keychain identity. Release now opens the remote terminal surface directly; Fixture navigation and authentication/echo probes are Debug-only. The compact header, tmux menu and single keyboard accessory are implemented, with physical layout acceptance pending. Only one saved-profile model exists so far; multiple profiles and identity selection are not yet complete. Local renderer scrollback is replaced on successful reattach; remote tmux history remains available through copy mode. Input delivered before an undetected network loss may have ambiguous delivery; it is never automatically resent on a new connection.
 
 Separate 20/60-minute screen locks, controlled network directions, process termination, outage input/draft assertions, actual iTerm2 UI, real Codex, broad full-screen/IME/hardware-keyboard and device-resource tests remain gates. A 6m56s screen-lock test and Airplane Mode-to-5G recovery passed; neither fills these other rows. See [physical evidence](research/physical-device-connection-debug.md).
 
@@ -63,3 +63,9 @@ No Mosh, backend, signup, companion, notifications, agent APIs/dashboard, files/
 ## Typography
 
 The terminal explicitly requests JetBrains Mono at the current 14-point default. The pinned Ghostty core embeds variable regular/italic JetBrains Mono faces and retains fallback handling for other glyphs. Original app controls and the native composer use iOS fonts; the selection sheet uses a Dynamic Type-scaled system monospaced font. No font picker is included. The JetBrains Mono SIL Open Font License notice is bundled in `Spike/App/Notices/JetBrainsMono-OFL.txt`. This is one dependency notice, not completion of the full third-party notice audit.
+
+## Normal terminal surface
+
+Release uses a compact host/status header with tmux actions, Compose and overflow. The saved **Reconnect target** is shown in the tmux menu/details, not presented as an observed live session. Switch Session sends the default Ctrl-B, then lowercase s sequence; custom tmux prefixes remain manual. The header exposes Show Keyboard when terminal focus is dismissed. A single keyboard accessory provides Esc, sticky Ctrl, Tab, arrows and Hide Keyboard. Ctrl+C is available by arming Ctrl and typing c.
+
+Connection Details, profile editing, sanitized diagnostics, Disconnect and Lock remain separate overflow actions. Disconnect first to edit the profile. Compose retains native multiline editing and the existing explicit paste/separate-Enter flow; sending is disabled offline. Reconnect keeps the last terminal visible under compact progress/failure controls. See [layout implementation and physical acceptance](research/layout.md) for implemented versus verified behavior. No native terminal tabs or session model were added.

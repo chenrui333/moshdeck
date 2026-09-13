@@ -78,3 +78,7 @@ Archive/export after `5000793` succeeded. IPA SHA-256: `e210f61cd329ddb43ae012cc
 Source `f1a9643` sets version 0.0.1 (2) and includes session help. The signed Release archive and App Store Connect distribution export succeeded. The original archive command referenced a deleted temporary dependency checkout; reusing the current validated package cache resolved that preparation error. Export then failed because Apple's rsync started Homebrew rsync 3.5.0, which rejected `--extended-attributes`; using a system-tools-only PATH for the export command succeeded without machine-wide changes.
 
 Build 2 has not been uploaded or distributed. Export verification and upload remain pending while the owner reviews the newly requested layout investigation. The exported artifact still contains the current Fixture navigation; the layout document recommends removing it from Release in a subsequent implementation, not pretending that change is already in this archive. Internal TestFlight build 1 remains the current available beta.
+
+## Layout build supersedes the earlier candidate
+
+The archive/export from `f1a9643` predates the compact layout and is superseded for the next beta. Do not upload it as the layout build. Source `c90efdd` built and installed as development-signed Release 0.0.1 (2) on the paired iPhone; physical layout acceptance remains pending. This installation is not a TestFlight distribution. Re-archive/export the accepted layout source before uploading build 2. Internal TestFlight build 1 remains unchanged.
