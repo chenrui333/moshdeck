@@ -135,3 +135,8 @@ Font Logos metadata identifies version 1.3.0; its notice is taken from that upst
 The Release device-target resource build passed after adding the notices. Previously exported IPAs do not contain this newly added file and need a fresh archive/export before distribution.
 
 The Seti upstream MIT notice (Jesse Weed, 2014) is now included as `Seti-MIT.txt`; [seti-notice.json](seti-notice.json) pins the inspected revision and hash. Nerd Fonts' `src/svgs/README.md` identifies these as Seti and Original source glyphs, with `_nf` suffixes for its Original additions. This supplies the identified upstream notice but does not prove individual SVG byte lineage after Nerd Fonts' documented path simplification. The identified symbol-font component notice inventory is now supplemented across these sources; the audit does not certify ownership of every individual logo or provide trademark clearance.
+
+
+## Resolved package cleanup — September 12, 2026
+
+A fresh Xcode resolution during the session-help build removed the obsolete remote `libghostty-spm` entry from the app's `Package.resolved` and updated its origin hash. All remaining remote dependency revisions are unchanged. The project already consumes the local source-built package; its wrapper/core pins remain in `Spike/scripts/prepare-ghostty.py`. Existing historical notice manifests retain the original wrapper revision and attribution. This lockfile cleanup does not upgrade the shipped terminal or replace TestFlight build 1.
