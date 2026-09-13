@@ -237,3 +237,10 @@ On subsequent inspection Tailscale showed the phone online and answered a ping v
 Both attempts reused the valid app unlock without another authentication request. The second followed roughly four minutes inactive/backgrounded, within the five-minute grace. The owner confirmed connecting and that it worked fine. Independent Mac metadata still showed pane `%0`, shell PID `89665`, running zsh. The original server-side shell survived; no replacement session was created for this investigation.
 
 This is a confirmed recovery after the reported connectivity problem, not a controlled 20/60-minute lock, network-direction, draft-retention or typing-latency test. The exact moment VPN reachability returned is unavailable. The initial failures therefore remain correlated with unavailable VPN connectivity rather than a proven SSH-library defect.
+
+
+## Actual iTerm2 attachment — September 12, 2026
+
+A separate real iTerm2 window was opened with an attach-only command targeting the existing `moshdeck-spike` session. Before attachment tmux reported zero clients, pane `%0`, zsh PID `89665`, and size 37×16. After attachment it reported one xterm-256color client at 171×47 and the same pane/PID at 171×46. The window uses ordinary tmux terminal mode, not iTerm2 control-mode integration. No terminal contents were captured and no command was injected into the shared shell.
+
+The existing window-size policy is `latest`; it was not changed. This proves actual iTerm2 attachment preserves the existing shell and updates its geometry. Phone simultaneous attachment, visible shared output, input from both clients, and detach in both directions remain pending. The owner was asked to connect the phone to this same session, run `echo $$`, and verify `89665` plus shared output in the new Mac window. No response has yet been recorded for that check.

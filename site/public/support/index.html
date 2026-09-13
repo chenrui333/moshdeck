@@ -16,6 +16,7 @@
 </details>
 <details><summary>The keyboard hides controls</summary><p>Use the terminal’s keyboard dismissal control, or restore the terminal from expanded mode. The early beta still has Fixture and SSH tabs. Choose SSH for remote work.</p>
 </details>
+<details><summary>Can I use multiple sessions?</summary><p>Your Mac can run multiple tmux sessions. This beta has one saved profile and one active connection. Ctrl-B, then S opens tmux’s session picker, but switching there does not update MoshDeck’s saved target. After reconnect, the app returns to the session in its profile. For predictable recovery to another workspace, disconnect and change the Session field before connecting again.</p></details>
 <section id="feedback"><h2>Report the sequence, not your secrets.</h2><p>Use <strong>Send Beta Feedback</strong> in TestFlight, or reply to the maintainer who invited you. Include:</p>
 <ul><li>App build, iPhone model and iOS version.</li><li>The action and connection stage that failed.</li><li>Network transition, time to recovery, and automatic versus manual reconnect.</li><li>Whether the same shell PID and composer draft survived.</li><li>Sanitized Copy Diagnostics output, reviewed before sending.</li></ul><p>Do not include private keys, passwords, prompts, terminal transcripts or screenshots showing secrets. Diagnostics are designed to omit terminal bytes; still review them for host information before sharing.</p>
 </section>

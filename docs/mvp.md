@@ -46,6 +46,10 @@ The installed/debug harness name and bundle identity remain stable to preserve t
 
 Separate 20/60-minute screen locks, controlled network directions, process termination, outage input/draft assertions, actual iTerm2 UI, real Codex, broad full-screen/IME/hardware-keyboard and device-resource tests remain gates. A 6m56s screen-lock test and Airplane Mode-to-5G recovery passed; neither fills these other rows. See [physical evidence](research/physical-device-connection-debug.md).
 
+## Multiple sessions in this beta
+
+The Mac can host multiple tmux sessions, windows and panes. MoshDeck currently has one saved profile and one active connection. tmux's native session picker (Ctrl-B, then S) can switch the current client, but that switch does not update MoshDeck's saved target: after interruption, reconnect attaches to the session named in the profile. For predictable recovery, explicitly disconnect and change the saved Session field before connecting to another workspace. Native browsing and multiple app terminals are not implemented.
+
 ## Deferred scope
 
 No Mosh, backend, signup, companion, notifications, agent APIs/dashboard, files/editor/Git UI, SCP/SFTP browser, multiple simultaneous terminals, plugins, themes marketplace, iCloud sync or analytics SDK. Architecture changes require new acceptance evidence, not preference for novelty.
