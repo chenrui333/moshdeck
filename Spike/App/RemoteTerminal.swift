@@ -567,41 +567,24 @@ final class RemoteTerminalModel: ObservableObject {
 
 @MainActor
 struct RemoteTerminalScreen: View {
-    var expanded = false
     @StateObject private var model = RemoteTerminalModel()
     @Environment(\.scenePhase) private var phase
     @State private var composing = false
     @State private var confirmingClearDraft = false
     @State private var showingSessionHelp = false
+    @State private var showingDetails = false
 
     var body: some View {
-        VStack(spacing: 5) {
-            Text(model.status).font(.callout).padding(8)
-                .accessibilityIdentifier("remote.status")
-                .accessibilityValue(model.accessibilityConnectionState)
-            if !expanded || !model.isLive {
-                if !model.notice.isEmpty { Text(model.notice).font(.caption) }
-                Button("Copy Diagnostics") { model.copyDiagnostics() }
-                if model.unlocked {
-                    Button("Lock app") { model.lock() }
-                    Button(model.useTmux ? "Saved session: \(model.sessionName) · Help" : "Shared session help") {
-                        showingSessionHelp = true
-                    }
-                    .accessibilityIdentifier("remote.sessionHelp")
-                }
-                if model.unlocked && !model.isLive && model.terminal != nil {
-                    Button("Connection settings") { model.editConnection() }
-                }
-                if !model.unlocked {
-                    Button("Unlock MoshDeck") { Task { await model.unlock() } }.disabled(model.preparingKey)
-                } else if model.busy {
-                    ProgressView()
-                    Button("Cancel connection") { model.disconnect() }
-                } else if !model.isLive {
-                    Button("Connect") { model.connect() }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(model.preparingKey)
-                }
+        VStack(spacing: 0) {
+            contextBar
+            if !model.unlocked {
+                Spacer()
+                Button("Unlock MoshDeck") { Task { await model.unlock() } }
+                    .buttonStyle(.borderedProminent).disabled(model.preparingKey)
+                if !model.notice.isEmpty { Text(model.notice).font(.caption).padding() }
+                Spacer()
+            } else if !model.isLive {
+                connectionBanner
             }
             if model.unlocked, let terminal = model.terminal {
                 TerminalSurfaceView(context: terminal)
@@ -609,13 +592,6 @@ struct RemoteTerminalScreen: View {
                     // A new remote surface must not reuse the previous attempt's view.
                     .id(ObjectIdentifier(terminal))
                     .allowsHitTesting(model.isLive && phase == .active)
-                HStack {
-                    Button("Esc") { terminal.sendKey(.escape) }
-                    Button("Ctrl-C") { terminal.sendKey(.c, modifiers: .ctrl) }
-                    Button("Ctrl-B") { terminal.sendKey(.b, modifiers: .ctrl) }
-                    Button("Compose") { composing = true }
-                }.disabled(!model.isLive || phase != .active)
-                if !expanded { Button("Disconnect") { model.disconnect() } }
             } else if model.unlocked {
                 Form {
                     TextField("Tailnet hostname or IP", text: $model.host)
@@ -624,9 +600,11 @@ struct RemoteTerminalScreen: View {
                     TextField("Verified OpenSSH host public key", text: $model.trustedHostKey)
                     Toggle("Use tmux", isOn: $model.useTmux)
                     if !model.useTmux {
-                        Picker("SSH test", selection: $model.diagnosticMode) {
-                            Text("Authentication only").tag("auth")
-                            Text("Echo command (no PTY)").tag("echo")
+                        Picker("Shell startup", selection: $model.diagnosticMode) {
+                            #if DEBUG
+                                Text("Authentication only").tag("auth")
+                                Text("Echo command (no PTY)").tag("echo")
+                            #endif
                             Text("Clean interactive shell").tag("clean-shell")
                             Text("Normal login shell").tag("shell")
                         }
@@ -655,10 +633,34 @@ struct RemoteTerminalScreen: View {
             if !unlocked {
                 composing = false
                 showingSessionHelp = false
+                showingDetails = false
                 model.selection = nil
             }
         }
 
+        .sheet(isPresented: $showingDetails) {
+            NavigationStack {
+                List {
+                    Section("Connection") {
+                        LabeledContent("Host", value: model.host)
+                        LabeledContent("Username", value: model.username)
+                        LabeledContent("Port", value: model.port)
+                        if model.useTmux { LabeledContent("Reconnect target", value: model.sessionName) }
+                        Text(model.status)
+                        if !model.notice.isEmpty { Text(model.notice) }
+                    }
+                    Section("Diagnostics") {
+                        Text(
+                            "Copies connection stages and safe error categories. Terminal contents and credentials are excluded."
+                        )
+                        Button("Copy Diagnostics") { model.copyDiagnostics() }
+                    }
+                }
+                .navigationTitle("Connection details").navigationBarTitleDisplayMode(.inline)
+                .toolbar { Button("Done") { showingDetails = false } }
+                .overlay { if !model.unlocked || phase != .active { Color.black.ignoresSafeArea() } }
+            }
+        }
         .sheet(isPresented: $showingSessionHelp) {
             NavigationStack {
                 List {
@@ -713,42 +715,164 @@ struct RemoteTerminalScreen: View {
                     }
             }
         }
-        .sheet(isPresented: $composing, onDismiss: { model.saveSession() }) {
-            NavigationStack {
-                VStack {
-                    Text("\(model.host) · \(model.useTmux ? model.sessionName : "shell")").font(.caption)
-                    TextEditor(text: $model.draft).accessibilityLabel("Prompt draft")
-                    Button("Paste without added Enter") { model.pasteDraft() }.disabled(!model.isLive)
-                    Button("Enter key") { model.terminal?.sendKey(.enter) }.disabled(!model.isLive)
-                }.padding().navigationTitle("Compose")
-                    .overlay {
-                        if !model.unlocked || phase != .active { Color.black.ignoresSafeArea() }
-                    }
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Clear draft", role: .destructive) { confirmingClearDraft = true }
-                                .disabled(model.draft.isEmpty)
+        .sheet(
+            isPresented: $composing, onDismiss: { model.saveSession() },
+            content: {
+                NavigationStack {
+                    VStack {
+                        Text("\(model.host) · \(model.useTmux ? "Reconnect target: " + model.sessionName : "shell")")
+                            .font(
+                                .caption)
+                        TextEditor(text: $model.draft).accessibilityLabel("Prompt draft")
+                        if !model.notice.isEmpty { Text(model.notice).font(.caption).lineLimit(2) }
+                        Button("Paste without added Enter") { model.pasteDraft() }.disabled(!model.isLive)
+                        Button("Enter key") { model.terminal?.sendKey(.enter) }.disabled(!model.isLive)
+                    }.padding().navigationTitle("Compose")
+                        .overlay {
+                            if !model.unlocked || phase != .active { Color.black.ignoresSafeArea() }
                         }
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") { composing = false }
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Clear draft", role: .destructive) { confirmingClearDraft = true }
+                                    .disabled(model.draft.isEmpty)
+                            }
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { composing = false }
+                            }
                         }
-                    }
-                    .alert("Clear this draft?", isPresented: $confirmingClearDraft) {
-                        Button("Clear draft", role: .destructive) {
-                            model.draft = ""
-                            model.saveSession()
+                        .alert("Clear this draft?", isPresented: $confirmingClearDraft) {
+                            Button("Clear draft", role: .destructive) {
+                                model.draft = ""
+                                model.saveSession()
+                            }
+                            Button("Cancel", role: .cancel) {}
+                        } message: {
+                            Text("This removes the saved draft from this device.")
                         }
-                        Button("Cancel", role: .cancel) {}
-                    } message: {
-                        Text("This removes the saved draft from this device.")
-                    }
-                    .confirmationDialog(
-                        "Pasted newlines may execute in a shell. Inspect the host and foreground program before pasting.",
-                        isPresented: $model.pasteWarning, titleVisibility: .visible
-                    ) {
-                        Button("Paste inspected text") { model.confirmPaste() }
-                    }
+                        .confirmationDialog(
+                            "Pasted newlines may execute in a shell. Inspect the host and foreground program before pasting.",
+                            isPresented: $model.pasteWarning, titleVisibility: .visible
+                        ) {
+                            Button("Paste inspected text") { model.confirmPaste() }
+                        }
+                }
+            })
+    }
+
+    private var contextBar: some View {
+        HStack(spacing: 4) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(model.unlocked && !model.host.isEmpty ? model.host : "MoshDeck")
+                    .font(.callout.weight(.semibold)).lineLimit(1).truncationMode(.middle)
+                Text(compactStatus).font(.caption)
+                    .accessibilityIdentifier("remote.status")
+                    .accessibilityValue(model.accessibilityConnectionState)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if model.unlocked {
+                if let terminal = model.terminal {
+                    TerminalKeyboardButton(terminal: terminal, enabled: model.isLive)
+                }
+                Menu {
+                    Button("Switch Session (Ctrl-B, s)") { sendTmuxPrefix(switchSession: true) }
+                        .disabled(!model.isLive || !model.useTmux)
+                    Button("Send Ctrl-B") { sendTmuxPrefix(switchSession: false) }
+                        .disabled(!model.isLive)
+                    if model.useTmux { Text("Reconnect target: \(model.sessionName)") }
+                    Button("How to Attach from Mac") { showSessionHelp() }
+                        .accessibilityIdentifier("remote.sessionHelp")
+                } label: {
+                    Text("tmux").frame(minWidth: 44, minHeight: 44)
+                }
+                .accessibilityLabel("tmux actions")
+                Button {
+                    dismissKeyboard()
+                    composing = true
+                } label: {
+                    Image(systemName: "square.and.pencil").frame(minWidth: 44, minHeight: 44)
+                }.accessibilityLabel("Compose")
+                Menu {
+                    Button("Connection Details") {
+                        dismissKeyboard()
+                        showingDetails = true
+                    }
+                    Button("Profile / Settings") { model.editConnection() }
+                        .disabled(model.isLive || model.busy)
+                    Button("Copy Diagnostics") { model.copyDiagnostics() }
+                    Button("Disconnect") { model.disconnect() }
+                    Button("Lock app") { model.lock() }
+                } label: {
+                    Image(systemName: "ellipsis").frame(minWidth: 44, minHeight: 44)
+                }.accessibilityLabel("Terminal actions")
+            }
+        }
+        .padding(.horizontal, 8).padding(.vertical, 2).background(.bar)
+    }
+
+    private var compactStatus: String {
+        if !model.unlocked { return model.status }
+        switch model.lifecycle.state {
+        case .failed: return "Disconnected"
+        case .disconnected: return "Disconnected"
+        default: return model.status
+        }
+    }
+
+    private var connectionBanner: some View {
+        VStack(spacing: 4) {
+            if case .failed(let failure) = model.lifecycle.state {
+                Text(failure.title).font(.callout.weight(.semibold))
+                Text(failure.message).font(.caption).lineLimit(3)
+            }
+            if !model.notice.isEmpty { Text(model.notice).font(.caption).lineLimit(2) }
+            HStack {
+                if model.busy {
+                    ProgressView()
+                    Button("Cancel connection") { model.disconnect() }
+                } else {
+                    Button(model.terminal == nil ? "Connect" : "Reconnect") { model.connect() }
+                        .buttonStyle(.borderedProminent).disabled(model.preparingKey)
+                }
+                Button("Details") {
+                    dismissKeyboard()
+                    showingDetails = true
+                }
+            }
+        }.padding(8)
+    }
+
+    private func dismissKeyboard() {
+        model.terminal?.attachedPlatformView?.resignFirstResponder()
+    }
+
+    private func showSessionHelp() {
+        dismissKeyboard()
+        showingSessionHelp = true
+    }
+
+    private func sendTmuxPrefix(switchSession: Bool) {
+        // Synchronous deliberate key events. No timers, shell commands or input queue.
+        guard model.isLive, phase == .active, let view = model.terminal?.attachedPlatformView else { return }
+        view.resetStickyModifiers()
+        guard view.sendKey(.b, modifiers: .ctrl) else { return }
+        if switchSession { view.sendKey(.s) }
+        model.terminal?.requestFocus()
+    }
+
+}
+
+@MainActor
+private struct TerminalKeyboardButton: View {
+    @ObservedObject var terminal: TerminalViewState
+    let enabled: Bool
+
+    var body: some View {
+        if !terminal.isFocused {
+            Button {
+                terminal.requestFocus()
+            } label: {
+                Image(systemName: "keyboard").frame(minWidth: 44, minHeight: 44)
+            }.accessibilityLabel("Show Keyboard").disabled(!enabled)
         }
     }
 }
