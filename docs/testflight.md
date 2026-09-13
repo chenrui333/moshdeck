@@ -10,7 +10,7 @@ Version **0.0.1 (1)** is uploaded, processed **VALID**, and **IN_BETA_TESTING** 
 - Build: `5aaca512-d147-4f90-9bdd-9b3c6ae0c875`.
 - Internal group: `ed5379bd-32f5-4e5c-a22e-626df71dd3a0`.
 - Uploaded IPA SHA-256: `e210f61cd329ddb43ae012cc17447f6f193141b1e3c790121b563509be498142` (notice-inclusive archive after `5000793`).
-- What to Test: [beta-test-notes.txt](beta-test-notes.txt), en-US localization saved and verified by the API response.
+- What to Test: the original build-1 en-US localization was saved and verified by the API response. The repository [beta-test-notes.txt](beta-test-notes.txt) now contains the build-3 draft; it has not been applied to App Store Connect.
 - Encryption metadata: `usesNonExemptEncryption=false`, accepted by App Store Connect. The declaration uses the audited Apple-platform CryptoKit implementation described below and Apple's OS-provided encryption documentation category. Tailscale is external to this app. The build Info.plist remains unchanged; the declaration was recorded on the processed build.
 
 Readbacks confirmed the build/group relationship and internal testing state. No production App Store submission or Git push was performed. This distribution checkpoint does not complete the remaining physical acceptance matrix. Historical preparation notes below describe superseded artifacts and earlier gates.
@@ -86,3 +86,13 @@ The archive/export from `f1a9643` predates the compact layout and is superseded 
 ## Native session panel candidate — build 3
 
 Source `91c96c6` includes the native tmux side panel and sets version 0.0.1 (3). The development-signed Release build and strict signature verification passed. Installation failed because the paired iPhone became unavailable to CoreDevice; build 2 remains the last successfully installed device build. Build 3 has not been archived/exported for distribution, uploaded or added to TestFlight. Internal build 1 remains unchanged. The superseded build-2 export must not be mistaken for the native panel candidate.
+
+## Build 3 archive verification — source `066ab4b`
+
+The signed Release archive completed successfully. Its application identifies as 0.0.1 (3), retains the existing bundle identifier and includes its icons. Strict signature verification passed; all 10 repository notice files match their bundled copies. Synthetic fixture markers and gettext imports are absent from the archived executable. Executable SHA-256: `ef7c879f78eaac0a52e808a67a11c553fb9f43bb7edfb8780041ba59ce99a987`. This verifies the archived application, not an exported distribution IPA.
+
+Distribution export failed with **No Accounts** and **No signing certificate "iOS Distribution" found**. Inspection of the prior successful export confirms that it used Apple's remote/cloud-managed Distribution signing, while the local keychain currently exposes one Apple Development identity. The Apple ID entry remains configured in Xcode preferences, but the failing export could not obtain a usable account session. No certificate was created, revoked or replaced. The owner was asked to refresh the Xcode account session before export is retried.
+
+The paired phone also remains unavailable to CoreDevice, so installation and physical testing of build 3 are still pending. These are separate gates: the development build can be installed once the phone is reachable; distribution export needs the signing account session. No build-3 IPA, upload, processing result or TestFlight assignment is claimed.
+
+The repository What to Test draft now describes build 3's compact layout and native panel. It has not been sent to App Store Connect and does not replace the existing build-1 localization remotely.

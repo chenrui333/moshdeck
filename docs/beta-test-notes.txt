@@ -1,21 +1,23 @@
-MoshDeck 0.0.1 (2) — early terminal beta
+MoshDeck 0.0.1 (3) — early terminal beta
 
 Use your own SSH host. The tested setup is an awake Mac with Remote Login, official Tailscale on both devices, and an existing tmux session. Authorize this phone's public key and independently verify the Mac's host key. MoshDeck has no account or cloud backend and does not embed Tailscale.
 
-Start work inside tmux on the Mac. Configure the phone to attach to that same named session. An ordinary iTerm2 tab outside tmux cannot be adopted automatically. You can also attach iTerm2 to the shared session with: tmux attach-session -t SESSION_NAME
+Start work inside tmux on the Mac. Configure the phone to attach to that same named session. An ordinary iTerm2 tab outside tmux cannot be adopted automatically. Join the shared session on the Mac with: tmux attach-session -t SESSION_NAME
 
-New in build 2: unlocked Session Help shows the saved tmux target, a Mac attach command, phone switching instructions and shared-control checks. Switching in tmux still does not change the saved reconnect target. This is help, not a native session picker.
+New in build 3: a compact terminal header, a single keyboard accessory and a native session side panel. Fixture navigation and the expand/restore bar are removed from Release. Compose is directly accessible; connection details, diagnostics, Disconnect and Lock are in the overflow menu.
 
 Please test:
-- Open Session Help, select the Mac command, dismiss it, and confirm ordinary terminal input still works. Check that help is concealed during backgrounding and app lock.
-- Unlock, connect, run harmless shell commands, and use Esc, Ctrl-C, Ctrl-B, Tab and arrows.
-- Dismiss the keyboard and expand/restore the terminal.
-- Compose a multiline prompt, dismiss/reopen it, and verify draft retention. Paste and Enter are separate actions; embedded newlines deserve care in a shell.
-- Switch apps, lock/unlock the phone, and change networks. Confirm recovery to the same tmux session and shell PID using echo $$.
-- Attach from iTerm2 and phone simultaneously. Detach either client with Ctrl-B then D; confirm the other remains usable. Do not use exit to test detachment.
+- Unlock, connect, and run harmless shell commands. Use Esc, Tab, arrows and sticky Ctrl. For Ctrl-C, tap Ctrl and then c. Confirm Ctrl clears after a key and after dismissing the keyboard.
+- Hide/show the keyboard several times, rotate the phone, and check terminal readability, scrollback and clipping. Compare visible terminal rows with the keyboard open versus hidden.
+- Choose tmux → Switch Session. Refresh the native list, select an existing session, and verify the correct remote work appears. Select another existing session and return. Selection reattaches the phone and updates its reconnect target; it does not create a session or detach Mac clients.
+- Use the terminal-picker fallback if needed. Manual switching inside tmux does not update the app's saved reconnect target. Names outside the current profile rules are shown but require this fallback.
+- Open Compose, edit a multiline prompt, dismiss/reopen it, and verify draft retention. Paste and Enter are separate actions; embedded newlines deserve care in a shell. Sending must be disabled during reconnect.
+- Switch apps, lock/unlock the phone, and change networks. Confirm recovery to the selected tmux session. At a shell prompt, echo $$ can help check shell PID continuity; do not send shell commands into an agent prompt.
+- Attach from iTerm2 and phone simultaneously. Confirm input from each appears on both. Detach either client with Ctrl-B then D and confirm the other remains usable. Do not use exit to test detachment.
+- Operate a coding agent in a disposable repository: normal and long composer prompts, streaming output, Ctrl-C and recovery. Confirm the same agent process survives when the phone disconnects.
 
 App unlock remains valid during foreground use. Five minutes inactive/backgrounded requires authentication on return. Reconnect must not replay offline keystrokes or create a replacement tmux session.
 
-This beta still exposes engineering controls and supports one saved profile. Full terminal compatibility, longer lock recovery and extended coding-agent use remain under evaluation. Mosh is not implemented.
+This beta supports one saved profile and one active phone terminal, with multiple remote tmux sessions accessible through switching. Full terminal compatibility, longer lock recovery and extended coding-agent use remain under evaluation. Mosh is not implemented.
 
 When reporting a failure, include the action, network transition, automatic/manual recovery, shell PID continuity and sanitized Copy Diagnostics output. Do not include private keys, prompts, terminal transcripts or screenshots containing secrets.
