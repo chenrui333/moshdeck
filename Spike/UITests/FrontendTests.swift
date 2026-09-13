@@ -132,6 +132,32 @@ final class FrontendTests: XCTestCase {
     }
 
     @MainActor
+    func testNativeSessionPanelSelectionAndDismissal() {
+        let app = XCUIApplication()
+        app.launch()
+        let open = app.buttons["Sessions"]
+        XCTAssertTrue(open.waitForExistence(timeout: 15))
+        open.tap()
+        let infra = app.buttons["session.option.infra"]
+        XCTAssertTrue(infra.waitForExistence(timeout: 5))
+        XCTAssertTrue(infra.isHittable)
+        XCTAssertGreaterThanOrEqual(infra.frame.height, 44)
+        XCTAssertTrue(app.staticTexts["Reconnect target: work"].exists)
+        XCTAssertFalse(app.staticTexts["Current session: work"].exists)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Synthetic native session side panel"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        infra.tap()
+        XCTAssertTrue(infra.waitForNonExistence(timeout: 5))
+        XCTAssertEqual(open.value as? String, "Selected infra")
+        open.tap()
+        app.buttons["Close sessions"].firstMatch.tap()
+        XCTAssertTrue(infra.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(open.isHittable)
+    }
+
+    @MainActor
     func testComposerDraftSurvivesThirtySecondBackground() {
         let app = XCUIApplication()
         app.launch()

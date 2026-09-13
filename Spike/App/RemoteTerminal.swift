@@ -72,6 +72,11 @@ final class RemoteTerminalModel: ObservableObject {
     @Published var terminal: TerminalViewState?
     @Published var selection: TerminalSelectionSnapshot?
     @Published var pasteWarning = false
+    @Published private(set) var listedSessions: [TmuxSessionSummary] = []
+    @Published private(set) var listingSessions = false
+    @Published private(set) var sessionListError: String?
+    private var sessionListRequest = UUID()
+    private var listedAttempt: UUID?
     @Published private(set) var lifecycle = ConnectionLifecycle()
     @Published private(set) var appLock = AppLockPolicy()
     @Published var notice = ""
@@ -500,6 +505,52 @@ final class RemoteTerminalModel: ObservableObject {
         if cancelAttempt { lifecycle.stop() }
         pendingPasteAttempt = nil
     }
+    func listSessions() async {
+        let request = UUID()
+        sessionListRequest = request
+        listedSessions = []
+        listedAttempt = nil
+        sessionListError = nil
+        guard isLive, useTmux, let connection else {
+            sessionListError = "Connect to a tmux session before refreshing this list."
+            listingSessions = false
+            return
+        }
+        let attempt = lifecycle.attemptID
+        listingSessions = true
+        defer { if sessionListRequest == request { listingSessions = false } }
+        do {
+            let sessions = try await connection.listTmuxSessions(executable: tmuxPath)
+            guard sessionListRequest == request, lifecycle.owns(attempt), isLive, !Task.isCancelled else { return }
+            listedSessions = sessions
+            listedAttempt = attempt
+        } catch is CancellationError {
+            // Closing the panel cancels only its auxiliary SSH channel.
+        } catch {
+            guard sessionListRequest == request, lifecycle.owns(attempt), isLive, !Task.isCancelled else { return }
+            sessionListError =
+                "Could not list sessions. Check the tmux executable in your profile, or use the terminal picker."
+        }
+    }
+
+    func attachListedSession(_ session: TmuxSessionSummary) -> Bool {
+        guard isLive, listedAttempt == lifecycle.attemptID,
+            listedSessions.contains(session), session.canAttach
+        else { return false }
+        // Explicit target selection reuses the existing disconnect/attach pipeline.
+        // A listed session must never be replaced if it vanishes before attachment.
+        guard (try? SessionIntent.attach(name: session.name).command(tmuxExecutable: tmuxPath)) != nil else {
+            return false
+        }
+        disconnect()
+        sessionName = session.name
+        createSession = false
+        listedSessions = []
+        listedAttempt = nil
+        connect(trigger: "native session selection")
+        return true
+    }
+
     func editConnection() {
         desiredActive = false
         stopTransport()
@@ -573,6 +624,8 @@ struct RemoteTerminalScreen: View {
     @State private var confirmingClearDraft = false
     @State private var showingSessionHelp = false
     @State private var showingDetails = false
+    @State private var showingSessions = false
+    @State private var sessionRefresh = UUID()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -627,13 +680,37 @@ struct RemoteTerminalScreen: View {
                 }.textInputAutocapitalization(.never).autocorrectionDisabled()
             }
         }
+        .accessibilityHidden(showingSessions)
+        .allowsHitTesting(!showingSessions)
+        .overlay(alignment: .leading) {
+            if showingSessions && model.unlocked && phase == .active {
+                TmuxSessionsPanel(
+                    sessions: model.listedSessions, loading: model.listingSessions,
+                    error: model.sessionListError, reconnectTarget: model.sessionName,
+                    canSelect: model.isLive && !model.listingSessions,
+                    select: { if model.attachListedSession($0) { showingSessions = false } },
+                    refresh: { sessionRefresh = UUID() },
+                    close: { showingSessions = false },
+                    terminalPicker: {
+                        showingSessions = false
+                        sendTmuxPrefix(switchSession: true)
+                    }
+                )
+                .task(id: sessionRefresh) { await model.listSessions() }
+            }
+        }
         .overlay { if phase != .active { Color.black.ignoresSafeArea() } }
-        .onChange(of: phase) { _, value in model.phaseChanged(value) }
+        .onChange(of: phase) { _, value in
+            if value != .active { showingSessions = false }
+            model.phaseChanged(value)
+        }
+        .onChange(of: model.lifecycle.attemptID) { _, _ in showingSessions = false }
         .onChange(of: model.unlocked) { _, unlocked in
             if !unlocked {
                 composing = false
                 showingSessionHelp = false
                 showingDetails = false
+                showingSessions = false
                 model.selection = nil
             }
         }
@@ -774,8 +851,11 @@ struct RemoteTerminalScreen: View {
                     TerminalKeyboardButton(terminal: terminal, enabled: model.isLive)
                 }
                 Menu {
-                    Button("Switch Session (Ctrl-B, s)") { sendTmuxPrefix(switchSession: true) }
-                        .disabled(!model.isLive || !model.useTmux)
+                    Button("Switch Session") {
+                        dismissKeyboard()
+                        showingSessions = true
+                    }
+                    .disabled(!model.isLive || !model.useTmux)
                     Button("Send Ctrl-B") { sendTmuxPrefix(switchSession: false) }
                         .disabled(!model.isLive)
                     if model.useTmux { Text("Reconnect target: \(model.sessionName)") }

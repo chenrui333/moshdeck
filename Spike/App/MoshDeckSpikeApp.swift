@@ -1,4 +1,5 @@
 import GhosttyTerminal
+import MoshDeckCore
 import SwiftUI
 import UIKit
 
@@ -190,6 +191,8 @@ final class PlainTextTerminalView: TerminalView {
         @StateObject private var model = HarnessModel()
         @Environment(\.scenePhase) private var phase
         @State private var showComposer = false
+        @State private var showSessions = false
+        @State private var sessionSelection = "No selection"
 
         var body: some View {
             VStack(spacing: 0) {
@@ -202,11 +205,26 @@ final class PlainTextTerminalView: TerminalView {
                     Button("Show Keyboard") { model.terminal.requestFocus() }
                     Button("Compose") { showComposer = true }
                     Button("Run fixture") { Task { await model.runChecks() } }
+                    Button("Sessions") { showSessions = true }.accessibilityValue(sessionSelection)
                 }
                 HStack {
                     Button("Check key input") { model.checkAccessoryKeys() }
                     Text(model.keyResult).accessibilityIdentifier("fixture.keys")
                 }.buttonStyle(.bordered).padding(6)
+            }
+            .accessibilityHidden(showSessions)
+            .allowsHitTesting(!showSessions)
+            .overlay(alignment: .leading) {
+                if showSessions {
+                    TmuxSessionsPanel(
+                        sessions: (try? TmuxSessionListing.parse(Data("infra|1|0\nwork|2|2\n".utf8))) ?? [],
+                        loading: false, error: nil, reconnectTarget: "work", canSelect: true,
+                        select: {
+                            sessionSelection = "Selected " + $0.name
+                            showSessions = false
+                        },
+                        refresh: {}, close: { showSessions = false }, terminalPicker: { showSessions = false })
+                }
             }
             .overlay {
                 if phase != .active {
