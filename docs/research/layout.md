@@ -179,3 +179,32 @@ Installation of build 3 **failed**: CoreDevice could not locate the phone, and a
 ### September 13 physical startup update
 
 Build 3 installed and launched successfully after the phone became reachable. Fresh app diagnostics show an unlocked app and a connected manual attempt with confirmed interactive output (approximately 9.320 seconds from Connect). This resolves the installation/startup gate for the candidate. Native panel selection/dismissal, shared-process control, keyboard/composer visual acceptance and reconnect/viewport measurements are still pending; no unreported interaction is marked PASS. See [physical evidence](physical-device-connection-debug.md).
+
+## Session navigation gestures — September 13, 2026
+
+**Research recommendation only; no gesture implementation or physical gesture acceptance.** The owner reported that opening Switch Session requires tapping through the menu and requested a comparison before implementation.
+
+Recommendation: make the existing native session panel reachable through one visible toolbar action, supplemented by an optional left-edge swipe. Select a named destination explicitly. Do not make a swipe across terminal content immediately change the remote session in this phase.
+
+### Evidence
+
+- [Blink's upstream README](https://github.com/blinksh/blink#using-blink) documents swiping between open shells/connections. This is a credible precedent for direct terminal paging, but it describes already-open local terminal surfaces. It does not establish that reconnecting to a different remote tmux target on every swipe provides the same experience. The dedicated Blink navigation page could not be fetched; the upstream README supplied this finding.
+- [Apple's gesture guidance](https://developer.apple.com/design/human-interface-guidelines/gestures) recommends familiar, discoverable interactions, visible alternatives and feedback during gestures. It supports gestures as shortcuts, not as the sole route to important actions. This does not prescribe a hidden drawer as the standard iPhone navigation pattern. A left-edge recognizer must also coexist with navigation Back gestures and system interactions.
+- [Termius's iOS navigation article](https://termius.com/blog/termius-for-ios-new-navigation-and-sftp), published February 2025, describes visible phone navigation and a different iPad tab layout. This is evidence for discoverable controls and device-specific presentation, not proof that its broader multi-connection architecture fits MoshDeck.
+- [Prompt 2 release notes](https://help.panic.com/releasenotes/prompt2/) document edge gestures for returning to the server list and cycling open connections in March 2015. This is historical precedent only. The [current Prompt iOS guide](https://help.panic.com/prompt/prompt-ios-getting-started/) does not confirm those exact gestures, so they are not attributed to current Prompt 3 behavior.
+
+Current source matters more than copying another app: `RemoteTerminalModel.attachListedSession` disconnects the phone transport, saves the selected target and reconnects through the existing attach-only pipeline. This is not an instantaneous local tab change. The pinned Ghostty UIKit wrapper's `handleTouchScrollGesture` forwards both horizontal and vertical translation as terminal scroll events. A competing whole-terminal swipe recognizer could therefore interfere with terminal interaction. Neither conflict frequency nor switching latency has been measured in a controlled phone comparison.
+
+### Options for this implementation
+
+| Interaction | Benefit | Cost / limitation | Decision |
+| --- | --- | --- | --- |
+| Existing tmux menu → Switch Session → row | Already implemented, explicit destination | Three taps; frequently used action is nested | Keep functional until replaced by a simpler entry point |
+| Visible Sessions button → row | Two taps, labelled destination, accessible, no new terminal gesture | Requires fitting one action into compact chrome | Preferred baseline; replace/reorganize the existing tmux action rather than adding another permanent row |
+| Left-edge swipe → panel → row | Opens the same list without reaching the header; can inspect or cancel before switching | Hidden shortcut; left edge may be awkward one-handed; recognizer arbitration needs device testing | Optional supplement to the visible button |
+| Swipe anywhere → previous/next session | Potentially fast for repeated two-session work | Destination/order less clear; conflicts with terminal pans; currently initiates reconnect; saved target may differ from a manually switched live session | Defer |
+| Swipe on header → previous/next session | Avoids most terminal-content gesture conflicts | Small gesture area, still hidden, still initiates reconnect | Reconsider only if repeated switching remains a measured problem |
+
+Opening, dragging or cancelling the panel must not change SSH state, session target or terminal input. Only explicit row selection should invoke the existing attachment operation. Closing via swipe, Close, outside tap and VoiceOver escape should be equivalent. Keep vertical list scrolling independent of horizontal dismissal; respect Reduce Motion. Gesture recognition must be confined to the terminal screen, excluding composer/settings sheets, keyboard and locked states. Edge gestures must not also deliver terminal scroll/mouse input.
+
+Before choosing final thresholds, test on the physical phone: ten open/close cycles with keyboard shown and hidden; vertical and diagonal terminal scrolls; text selection; panel list scrolling; interrupted drags; rotation; VoiceOver/button alternatives; and alternating between two named tmux sessions. Record missed/accidental activations, intended destination, taps/gestures, time to usable output and unchanged Mac processes. These are planned checks, not measured results. No native tabs, additional live terminals or connection-lifecycle changes are justified by this research.
