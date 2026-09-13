@@ -59,3 +59,9 @@ Replace `work` with a name from the list. Configure MoshDeck to use that same na
 An existing process in an ordinary iTerm2 shell outside tmux cannot be adopted automatically. MoshDeck does not move local sessions or execute the coding assistant on the phone.
 
 Multiple Mac tmux sessions and switching through Ctrl-B, then S are part of the MVP workflow. Native MoshDeck tabs and multiple concurrent SSH connections are post-MVP. Current recovery returns to the saved profile's session, even if tmux's picker switched the live client elsewhere. See [MVP scope](docs/mvp.md), [beta setup](site/public/setup/index.html) and [physical acceptance evidence](docs/research/physical-device-connection-debug.md).
+
+### Native session switching
+
+In the build-3 development candidate, connect and choose **tmux → Switch Session** to open the native side panel. Tap a listed session to reattach the phone and save that session as its reconnect target. Other Mac clients keep running. Native physical-device acceptance is pending; internal TestFlight build 1 does not contain this panel yet.
+
+Use `tmux new-session -d -s infra` at a shell prompt to create an additional session, then refresh the panel. Native selection is attach-only. The **Open terminal picker** fallback supports ordinary tmux navigation, but manual switches there do not update the saved reconnect target. One active phone terminal remains the supported model.

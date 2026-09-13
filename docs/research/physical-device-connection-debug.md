@@ -276,3 +276,9 @@ Do not type shell PID commands into the Codex prompt. Collect process IDs with M
 The owner reported “iphone check worked.” Immediate tmux metadata showed two clients on `moshdeck-spike` (171×47 actual iTerm2 and 37×26 phone-sized client), both on pane `%0`, with original zsh PID `89665`. This establishes simultaneous attachment to the same existing shell with the owner's successful phone-check report. The specific visible marker was asked for separately because two checks had been discussed.
 
 At that same observation, `work` had only its 171×47 iTerm2 client, shell PID `36685` and Codex PID `39924`. Therefore this report does not yet establish simultaneous Codex control. The owner was directed to use the phone's Ctrl-B control, type S, select `work`, and send a harmless readiness prompt there. Actual picker success, shared agent output and both directions of detach remain pending.
+
+## Native session panel preparation — September 12, 2026
+
+The layout-only development Release build 2 installed successfully earlier in this session. The subsequent native session panel candidate is build 3, source `91c96c6`. Its Release build and signature check passed, but installation failed with CoreDevice error 1011; a fresh inventory showed the iPhone unavailable. No native-panel physical result is recorded. Connect/unlock the phone, install build 3, then select two existing sessions from **tmux → Switch Session** and verify shared Mac input and selected-target recovery.
+
+At the installation checkpoint, Mac metadata still showed `work` pane `%1`, shell PID `36685`, and the original child Codex PID `39924`. No private terminal output was captured. Process survival does not establish successful phone selection, bidirectional control, detach behavior or layout usability.

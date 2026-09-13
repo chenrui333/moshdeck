@@ -149,3 +149,29 @@ Source-level improvement: Release removes the tab bar, global expansion/dismissa
 No connection/input regression appeared in the executed local checks. Physical regression status is unverified. VoiceOver reading order, larger Dynamic Type with the full connected header, hardware-keyboard presentation and narrow-width accessory scrolling still require use on a device. No further visual redesign is justified until those observations arrive.
 
 The earlier exported build-2 archive predates these changes and must not be uploaded as this layout beta. A new distribution archive/export is required after the chosen acceptance checkpoint; the installed development-signed Release app is not a TestFlight upload.
+
+## Native session side panel — owner-requested follow-up
+
+The owner explicitly requested a mobile-native side menu after using the compact layout. This supersedes the earlier menu-only recommendation; native terminal tabs remain excluded.
+
+Implemented in the version 0.0.1 (3) candidate:
+
+- **tmux → Switch Session** opens a left-side modal panel using SwiftUI List rows, Refresh and Close. The existing terminal stays in its view hierarchy underneath the panel. Opening the panel dismisses terminal keyboard focus; the modal blocks terminal touch input and hides the underlying controls from accessibility navigation.
+- The list reads only session names, window counts and attached-client counts. It does not infer a running agent, a currently selected pane, or the identity of attached clients. **Reconnect target** describes saved intent, not observed live tmux selection.
+- Listing uses `tmux -u list-sessions -F` on a short-lived auxiliary channel of the existing authenticated SSH connection. No extra SSH login, PTY, backend, daemon or tmux control-mode model is added. The implementation follows tmux's [documented formatted list commands](https://github.com/tmux/tmux/wiki/Formats).
+- Selecting a valid row deliberately disconnects the phone's current attachment, saves the selected target and reconnects through the existing pipeline with creation disabled. The selection must belong to the current connection attempt. Other Mac clients and remote processes remain attached/running; the phone's selected session becomes its recovery target. A missing target fails instead of creating a replacement.
+- Manual switching through the terminal picker still does not update the saved profile. The panel includes that fallback. Names outside the existing ASCII/64-byte profile rules remain visible but cannot be selected natively; no name is silently rewritten into another target.
+- Metadata is limited to 32 KiB and 256 records, with a five-second timeout. stderr is bounded and discarded. Query cancellation, timeout, rejection, malformed output and nonzero exit affect the auxiliary query, not the interactive connection. Names and query output are not added to terminal or diagnostics logs.
+- Late results are checked against both request and connection-attempt IDs. Closing/backgrounding the panel cancels its query; changing connection attempts closes the panel. Neither selection nor refresh queues raw terminal input.
+
+An isolated real-tmux test exposed a format difference: tab separators were transformed in a minimal non-UTF-8 locale. The final query uses a printable ASCII delimiter and forces UTF-8 output (`-u`). The regression verifies exact Unicode names remain visible but unsupported for native attachment, rather than becoming a different ASCII target.
+
+Local evidence: metadata parser/quoting/bounds tests passed; isolated OpenSSH tests verified separate output channels and terminal survival after nonzero exit, output overflow, five-second timeout and cancellation. A private tmux server returned three real sessions, including a Unicode name; attach-only missing-session behavior remained intact. The native panel UI test exercised a row selection and Close with synthetic metadata. These are local/simulator results, not physical session-switch acceptance.
+
+One combined simulator run passed its assertions but paused about 298 seconds inside a keyboard-disappearance observation. That run is not a latency measurement. A focused recheck is recorded below when complete. The panel screenshot was visually inspected; it is synthetic fixture content, not a capture of a private terminal.
+
+Physical gate remains: on the iPhone 15 Pro Max, select two existing sessions from the panel, confirm the intended shared Mac process in each, then interrupt/reconnect and verify the selected target returns. Native selection and manual terminal-picker switching now have deliberately different target-persistence semantics.
+
+Native panel checkpoint: `439e137` adds the bounded metadata query and tests; `91c96c6` adds the panel and build number 3. Full core regression: **36 tests in 6 suites passed**, including isolated OpenSSH/tmux cases. Two selected simulator UI tests passed (native selection/dismissal and keyboard/rotation); the focused keyboard recheck completed in **28.602 seconds** with all assertions passing. Changed Swift files pass strict formatting lint and `git diff --check`. The signed Release build and strict app signature verification passed.
+
+Installation of build 3 **failed**: CoreDevice could not locate the phone, and a fresh device inventory reported the paired iPhone unavailable. The last successfully installed app remains layout build 2; native panel physical acceptance has not occurred. The owner was asked to connect/unlock the phone for installation. Mac metadata still showed `work` pane `%1`, original shell PID `36685` and its running child Codex PID `39924`; this is process-continuity evidence only, not phone interaction evidence.

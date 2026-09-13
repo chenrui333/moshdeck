@@ -82,3 +82,7 @@ Build 2 has not been uploaded or distributed. Export verification and upload rem
 ## Layout build supersedes the earlier candidate
 
 The archive/export from `f1a9643` predates the compact layout and is superseded for the next beta. Do not upload it as the layout build. Source `c90efdd` built and installed as development-signed Release 0.0.1 (2) on the paired iPhone; physical layout acceptance remains pending. This installation is not a TestFlight distribution. Re-archive/export the accepted layout source before uploading build 2. Internal TestFlight build 1 remains unchanged.
+
+## Native session panel candidate — build 3
+
+Source `91c96c6` includes the native tmux side panel and sets version 0.0.1 (3). The development-signed Release build and strict signature verification passed. Installation failed because the paired iPhone became unavailable to CoreDevice; build 2 remains the last successfully installed device build. Build 3 has not been archived/exported for distribution, uploaded or added to TestFlight. Internal build 1 remains unchanged. The superseded build-2 export must not be mistaken for the native panel candidate.
