@@ -1,10 +1,13 @@
-MoshDeck 0.0.1 — early terminal beta
+MoshDeck 0.0.1 (2) — early terminal beta
 
 Use your own SSH host. The tested setup is an awake Mac with Remote Login, official Tailscale on both devices, and an existing tmux session. Authorize this phone's public key and independently verify the Mac's host key. MoshDeck has no account or cloud backend and does not embed Tailscale.
 
 Start work inside tmux on the Mac. Configure the phone to attach to that same named session. An ordinary iTerm2 tab outside tmux cannot be adopted automatically. You can also attach iTerm2 to the shared session with: tmux attach-session -t SESSION_NAME
 
+New in build 2: unlocked Session Help shows the saved tmux target, a Mac attach command, phone switching instructions and shared-control checks. Switching in tmux still does not change the saved reconnect target. This is help, not a native session picker.
+
 Please test:
+- Open Session Help, select the Mac command, dismiss it, and confirm ordinary terminal input still works. Check that help is concealed during backgrounding and app lock.
 - Unlock, connect, run harmless shell commands, and use Esc, Ctrl-C, Ctrl-B, Tab and arrows.
 - Dismiss the keyboard and expand/restore the terminal.
 - Compose a multiline prompt, dismiss/reopen it, and verify draft retention. Paste and Enter are separate actions; embedded newlines deserve care in a shell.
