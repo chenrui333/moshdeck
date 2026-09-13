@@ -269,3 +269,10 @@ Baseline: `work`, pane `%1`, shell PID `36685`, direct child Codex PID `39924`; 
 | 11. Phone Ctrl-B then S, switch to second session and back | Picker usable; commands accepted in second shell; original agent survives | NOT TESTED |
 
 Do not type shell PID commands into the Codex prompt. Collect process IDs with Mac-side tmux/process metadata, without capturing terminal contents. After testing a live picker switch, remember reconnect targets the saved `work` profile rather than learning the client's temporary selection. Record the phone build, automatic/manual recovery, lock state, size changes and any input friction with the results. Leave process IDs unchanged until the continuity checks are complete; do not restart the agent merely to get a passing row.
+
+
+## Phone check report and simultaneous client observation — September 12, 2026
+
+The owner reported “iphone check worked.” Immediate tmux metadata showed two clients on `moshdeck-spike` (171×47 actual iTerm2 and 37×26 phone-sized client), both on pane `%0`, with original zsh PID `89665`. This establishes simultaneous attachment to the same existing shell with the owner's successful phone-check report. The specific visible marker was asked for separately because two checks had been discussed.
+
+At that same observation, `work` had only its 171×47 iTerm2 client, shell PID `36685` and Codex PID `39924`. Therefore this report does not yet establish simultaneous Codex control. The owner was directed to use the phone's Ctrl-B control, type S, select `work`, and send a harmless readiness prompt there. Actual picker success, shared agent output and both directions of detach remain pending.

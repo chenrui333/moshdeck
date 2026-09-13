@@ -6,7 +6,7 @@ Daily-use MVP matrix, September 7, 2026. PASS requires the actual physical app p
 | --- | --- | --- | --- | --- | --- |
 | zsh shell | PARTIAL | Phone shell and commands passed in spike | Owner confirmed command use; scrolling not formally checked | Synthetic coverage only; shell geometry observed | tmux-backed recovery passed |
 | bash | NOT TESTED | — | — | — | — |
-| tmux | PARTIAL | Physical attach passed | Owner interaction confirmed | Phone/Mac PTY resizing passed; actual iTerm2 UI pending | Same pane/shell retained through recovery |
+| tmux | PARTIAL | Physical attach passed | Owner interaction confirmed | Actual iTerm2 and phone clients observed on same shell; both-direction input/resize acceptance pending | Same pane/shell retained through recovery |
 | less / man | NOT TESTED | — | — | — | — |
 | vim | NOT TESTED | — | — | — | — |
 | neovim | NOT TESTED | — | — | — | — |
