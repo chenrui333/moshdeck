@@ -72,3 +72,9 @@ Apple web authentication remained unavailable at this checkpoint. App-record cre
 ## Latest notice-inclusive export
 
 Archive/export after `5000793` succeeded. IPA SHA-256: `e210f61cd329ddb43ae012cc17447f6f193141b1e3c790121b563509be498142`. The extracted application passed strict signature verification; `Seti-MIT.txt` and `AdditionalSymbolFonts.txt` match their repository files byte for byte. This supersedes earlier candidate IPA hashes for upload preparation. Apple web authentication is still pending, so there is no app-record creation, upload, processing result or tester distribution.
+
+## Build 2 preparation — September 12, 2026
+
+Source `f1a9643` sets version 0.0.1 (2) and includes session help. The signed Release archive and App Store Connect distribution export succeeded. The original archive command referenced a deleted temporary dependency checkout; reusing the current validated package cache resolved that preparation error. Export then failed because Apple's rsync started Homebrew rsync 3.5.0, which rejected `--extended-attributes`; using a system-tools-only PATH for the export command succeeded without machine-wide changes.
+
+Build 2 has not been uploaded or distributed. Export verification and upload remain pending while the owner reviews the newly requested layout investigation. The exported artifact still contains the current Fixture navigation; the layout document recommends removing it from Release in a subsequent implementation, not pretending that change is already in this archive. Internal TestFlight build 1 remains the current available beta.
