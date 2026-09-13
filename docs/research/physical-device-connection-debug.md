@@ -244,3 +244,28 @@ This is a confirmed recovery after the reported connectivity problem, not a cont
 A separate real iTerm2 window was opened with an attach-only command targeting the existing `moshdeck-spike` session. Before attachment tmux reported zero clients, pane `%0`, zsh PID `89665`, and size 37×16. After attachment it reported one xterm-256color client at 171×47 and the same pane/PID at 171×46. The window uses ordinary tmux terminal mode, not iTerm2 control-mode integration. No terminal contents were captured and no command was injected into the shared shell.
 
 The existing window-size policy is `latest`; it was not changed. This proves actual iTerm2 attachment preserves the existing shell and updates its geometry. Phone simultaneous attachment, visible shared output, input from both clients, and detach in both directions remain pending. The owner was asked to connect the phone to this same session, run `echo $$`, and verify `89665` plus shared output in the new Mac window. No response has yet been recorded for that check.
+
+
+## Required shared-process and switching acceptance — September 12, 2026
+
+The owner explicitly confirmed that simultaneous iTerm2/iPhone control of the same running Codex process and basic phone-side tmux switching are MVP gates. Native tabs and multiple concurrent MoshDeck SSH connections remain excluded. This check supplements, rather than replaces, the outstanding lifecycle/fidelity matrix.
+
+Preparation used a new disposable Git repository under ignored `.build/`, containing only an acceptance README and local instructions. The repository was initialized on branch `acceptance` with a DCO-signed fixture commit. No existing workspace/session was replaced. Actual iTerm2 launched `tmux new-session -A -s work` in that directory. An interactive Codex CLI 0.154.0 process was then launched in its shell with a harmless readiness prompt; the existing ChatGPT login was present. No app-server API, agent internals or terminal transcript collection was used.
+
+Baseline: `work`, pane `%1`, shell PID `36685`, direct child Codex PID `39924`; one actual iTerm2 client attached. A second detached shell session, `moshdeck-switch-check`, was created for the picker test. The older `moshdeck-spike` session remains intact. Process launch does not prove the readiness response was rendered, account execution succeeded, or the phone attached; a possible workspace-trust prompt must be handled in the visible Mac window.
+
+| Step | Required evidence | Current result |
+| --- | --- | --- |
+| 1. Create/attach `work` in actual iTerm2 | iTerm2 window and tmux client | PASS: actual window plus tmux metadata |
+| 2. Start Codex inside `work` | Foreground child process; usable UI | PARTIAL: PID 39924 launched; visible readiness not yet confirmed |
+| 3. Attach physical MoshDeck to `work` | Second client, phone live output | NOT TESTED |
+| 4. Same running Codex process | Same pane/shell/Codex PIDs with both clients attached | NOT TESTED |
+| 5. Phone input reflected on Mac | Harmless prompt/reply visible on both screens | NOT TESTED; owner asked to send a phone marker |
+| 6. Mac input reflected on phone | Harmless prompt/reply visible on both screens | NOT TESTED |
+| 7. Disconnect phone | Mac remains usable; original Codex PID alive | NOT TESTED |
+| 8. Reattach phone, detach iTerm2 | Phone remains usable; original Codex PID alive | NOT TESTED |
+| 9. Reattach both | Two clients target original session/pane | NOT TESTED |
+| 10. Final continuity | Original shell and Codex PIDs survive | NOT TESTED |
+| 11. Phone Ctrl-B then S, switch to second session and back | Picker usable; commands accepted in second shell; original agent survives | NOT TESTED |
+
+Do not type shell PID commands into the Codex prompt. Collect process IDs with Mac-side tmux/process metadata, without capturing terminal contents. After testing a live picker switch, remember reconnect targets the saved `work` profile rather than learning the client's temporary selection. Record the phone build, automatic/manual recovery, lock state, size changes and any input friction with the results. Leave process IDs unchanged until the continuity checks are complete; do not restart the agent merely to get a passing row.

@@ -28,3 +28,19 @@ The accepted architecture uses GhosttyTerminal, ordinary SSH over the official T
 - [Actual results and open gates](docs/research/spike-results.md)
 
 The [development app](Spike/README.md) has physical-iPhone SSH/tmux, command input and automatic recovery evidence. Longer lock/outage, broad terminal application and Codex dogfood tests remain acceptance gates; see the current matrices before relying on a specific capability.
+
+
+## Share a running session between Mac and iPhone
+
+Start persistent work inside tmux from the beginning. In iTerm2 on the Mac:
+
+```sh
+tmux new-session -A -s work
+codex
+```
+
+In MoshDeck, enable **Use tmux**, set **Session** to `work`, and connect using the verified SSH profile. Both clients then address the same tmux pane and running process; input from either affects it. From another ordinary iTerm2 tab, use `tmux attach-session -t work`. Detach a client with Ctrl-B, then D; `exit` terminates a shell instead.
+
+An existing process in an ordinary iTerm2 shell outside tmux cannot be adopted automatically. MoshDeck does not move local sessions or execute the coding assistant on the phone.
+
+Multiple Mac tmux sessions and switching through Ctrl-B, then S are part of the MVP workflow. Native MoshDeck tabs and multiple concurrent SSH connections are post-MVP. Current recovery returns to the saved profile's session, even if tmux's picker switched the live client elsewhere. See [MVP scope](docs/mvp.md), [beta setup](site/public/setup/index.html) and [physical acceptance evidence](docs/research/physical-device-connection-debug.md).

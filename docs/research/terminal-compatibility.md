@@ -15,7 +15,7 @@ Daily-use MVP matrix, September 7, 2026. PASS requires the actual physical app p
 | nested SSH | NOT TESTED | — | — | — | — |
 | kubectl | NOT TESTED | — | — | — | — |
 | terraform | NOT TESTED | — | — | — | — |
-| Codex | NOT TESTED | Disposable repository required | Normal/long prompt, Ctrl-C, continue required | Streaming output and resize required | Same process across recovery and iTerm2 handoff required |
+| Codex | NOT TESTED on phone | Real iTerm2 process started in disposable repository September 12; visible readiness pending | Normal/long prompt, Ctrl-C, continue required | Streaming output and resize required | Same process across recovery and iTerm2 handoff required |
 | Claude Code | NOT TESTED | Check installation first | — | — | — |
 | CJK/Unicode | PARTIAL | Synthetic ASCII/Chinese, split UTF-8 fixture passed | Native composer and direct IME acceptance pending | Emoji/combining text present in fixture; width/copy visual acceptance pending | — |
 | Hardware keyboard | NOT TESTED | Hardware availability unknown | Ctrl/Alt/Esc/arrows/Tab/deduplication pending | — | — |
@@ -61,3 +61,8 @@ After the fix, simulator parser/input coverage passed in 7.406 seconds, and actu
 `Spike/scripts/prepare-terminal-acceptance.py` was executed on the Mac and produced an isolated temporary Git repository with a DCO-signed baseline commit, Unicode/scrolling sample, coding task and three passing standard-library Python tests. No tmux session or coding agent was started; the existing phone continuity session was preserved. The [phone steps](phone-test-steps.md) describe the later explicit attachment and agent workflow.
 
 A PATH availability check found tmux, vim, top, Git, OpenSSH, kubectl, Terraform, Codex and Claude. Neither nvim nor htop was on PATH. Availability is not terminal acceptance, and this check does not establish tool versions or account/authentication readiness. All corresponding unrun physical matrix rows remain unchanged.
+
+
+## Shared session gate clarified — September 12, 2026
+
+Actual iTerm2 plus physical MoshDeck must control the same running Codex process, including both input directions and independent detach/reattach. Phone Ctrl-B/S switching between two tmux sessions is also required. The prepared process baseline and per-step results are in [physical acceptance](physical-device-connection-debug.md). Native session browsing/tabs are not required for these checks. Mac process launch alone does not change a physical compatibility row to PASS.

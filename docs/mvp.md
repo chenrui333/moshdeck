@@ -46,9 +46,15 @@ The installed/debug harness name and bundle identity remain stable to preserve t
 
 Separate 20/60-minute screen locks, controlled network directions, process termination, outage input/draft assertions, actual iTerm2 UI, real Codex, broad full-screen/IME/hardware-keyboard and device-resource tests remain gates. A 6m56s screen-lock test and Airplane Mode-to-5G recovery passed; neither fills these other rows. See [physical evidence](research/physical-device-connection-debug.md).
 
+## Shared-process acceptance is a required MVP gate
+
+Actual iTerm2 and a physical iPhone must simultaneously attach to the same existing tmux session/pane and control the same running Codex process. Verify input in both directions, disconnect the phone while the Mac remains usable, detach the Mac while the phone remains usable, then reattach both and compare the original shell and Codex PIDs. These are required acceptance checks, not a future feature and not satisfied by generic PTY concurrency tests. Current results are in [physical evidence](research/physical-device-connection-debug.md).
+
+Start with `tmux new-session -A -s work` in iTerm2 and launch Codex inside it. A Codex process already running in an ordinary non-tmux shell cannot be adopted automatically. The phone must use the same session and pane; separate panes normally have different processes.
+
 ## Multiple sessions in this beta
 
-The Mac can host multiple tmux sessions, windows and panes. MoshDeck currently has one saved profile and one active connection. tmux's native session picker (Ctrl-B, then S) can switch the current client, but that switch does not update MoshDeck's saved target: after interruption, reconnect attaches to the session named in the profile. For predictable recovery, explicitly disconnect and change the saved Session field before connecting to another workspace. Native browsing and multiple app terminals are not implemented.
+The Mac can host multiple tmux sessions, windows and panes. MoshDeck currently has one saved profile and one active connection. tmux's native session picker (Ctrl-B, then S) can switch the current client, but that switch does not update MoshDeck's saved target: after interruption, reconnect attaches to the session named in the profile. For predictable recovery, explicitly disconnect and change the saved Session field before connecting to another workspace. Switching between at least two tmux sessions from the physical phone is an MVP acceptance gate; the existing Ctrl-B control and normal tmux picker are sufficient. Native browsing is not required, and multiple simultaneous app terminals remain post-MVP. Neither is implemented.
 
 ## Deferred scope
 
