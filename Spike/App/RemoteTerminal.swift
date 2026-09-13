@@ -75,6 +75,11 @@ final class RemoteTerminalModel: ObservableObject {
     @Published private(set) var listedSessions: [TmuxSessionSummary] = []
     @Published private(set) var listingSessions = false
     @Published private(set) var sessionListError: String?
+    @Published private(set) var observedSession: String?
+    @Published private(set) var switchingSession = false
+    @Published private(set) var swipePreview: SessionSwipePreview?
+    var sessionNavigationPresented = false
+    private var switchTask: Task<Void, Never>?
     private var sessionListRequest = UUID()
     private var listedAttempt: UUID?
     @Published private(set) var lifecycle = ConnectionLifecycle()
@@ -100,6 +105,11 @@ final class RemoteTerminalModel: ObservableObject {
     var unlocked: Bool { appLock.permitsAccess(at: Date()) }
     var preparingKey: Bool { appLock.state == .unlocking }
     var isLive: Bool { lifecycle.isLive && unlocked && sceneActive }
+    var canSendInput: Bool { isLive && !switchingSession && swipePreview == nil }
+    var canSwipeSessions: Bool {
+        isLive && useTmux && !switchingSession && !listingSessions && !sessionNavigationPresented
+            && selection == nil && listedAttempt == lifecycle.attemptID && observedSession != nil
+    }
     var busy: Bool { lifecycle.isStarting || retryTask != nil }
     var status: String {
         if !unlocked { return preparingKey ? "Unlocking app…" : "App locked" }
@@ -321,7 +331,11 @@ final class RemoteTerminalModel: ObservableObject {
                 let surface = TerminalViewState(terminalConfiguration: safeTerminalConfiguration())
                 surface.makePlatformView = { [weak self] in
                     let view = PlainTextTerminalView(frame: .zero)
-                    view.acceptsTerminalInput = { [weak self] in self?.isLive == true }
+                    view.acceptsTerminalInput = { [weak self] in self?.canSendInput == true }
+                    view.sessionSwipe?.enabled = { [weak self] in self?.canSwipeSessions == true }
+                    view.sessionSwipe?.update = { [weak self] phase, delta, velocity, width in
+                        self?.updateSessionSwipe(phase, delta: delta, velocity: velocity, width: width)
+                    }
                     return view
                 }
                 surface.configuration = .init(backend: .inMemory(session), fontSize: 14)
@@ -385,11 +399,13 @@ final class RemoteTerminalModel: ObservableObject {
                     fail(id, .init(stage: .awaitingOutput, code: "noInteractiveOutputWithin10Seconds", retryable: true))
                     return
                 }
+                if useTmux { await listSessions() }
                 livenessTask = Task { [weak self] in
                     do {
                         while !Task.isCancelled {
                             try await Task.sleep(for: .seconds(20))
                             try await live.checkLiveness()
+                            if let self, self.canSwipeSessions, self.swipePreview == nil { await self.listSessions() }
                         }
                     } catch is CancellationError {} catch {
                         self?.fail(id, ConnectionFailure.capture(error, stage: .openingTransport))
@@ -488,6 +504,12 @@ final class RemoteTerminalModel: ObservableObject {
         }
     }
     private func stopTransport(cancelAttempt: Bool = true) {
+        switchTask?.cancel()
+        switchTask = nil
+        switchingSession = false
+        swipePreview = nil
+        observedSession = nil
+        listedAttempt = nil
         terminal?.attachedPlatformView?.resignFirstResponder()
         eventContinuation?.finish()
         eventContinuation = nil
@@ -520,35 +542,102 @@ final class RemoteTerminalModel: ObservableObject {
         listingSessions = true
         defer { if sessionListRequest == request { listingSessions = false } }
         do {
-            let sessions = try await connection.listTmuxSessions(executable: tmuxPath)
+            let snapshot = try await connection.tmuxSnapshot(executable: tmuxPath)
             guard sessionListRequest == request, lifecycle.owns(attempt), isLive, !Task.isCancelled else { return }
-            listedSessions = sessions
+            listedSessions = snapshot.sessions
+            observedSession = snapshot.currentSession
             listedAttempt = attempt
         } catch is CancellationError {
             // Closing the panel cancels only its auxiliary SSH channel.
         } catch {
             guard sessionListRequest == request, lifecycle.owns(attempt), isLive, !Task.isCancelled else { return }
             sessionListError =
-                "Could not list sessions. Check the tmux executable in your profile, or use the terminal picker."
+                "Could not identify this phone’s tmux client. Refresh, or use the terminal picker (Ctrl-B, s)."
         }
     }
 
     func attachListedSession(_ session: TmuxSessionSummary) -> Bool {
-        guard isLive, listedAttempt == lifecycle.attemptID,
-            listedSessions.contains(session), session.canAttach
+        guard isLive, !switchingSession, listedAttempt == lifecycle.attemptID,
+            listedSessions.contains(session), session.canAttach, let source = observedSession,
+            let connection
         else { return false }
-        // Explicit target selection reuses the existing disconnect/attach pipeline.
-        // A listed session must never be replaced if it vanishes before attachment.
-        guard (try? SessionIntent.attach(name: session.name).command(tmuxExecutable: tmuxPath)) != nil else {
-            return false
+        if source == session.name { return true }
+        let attempt = lifecycle.attemptID
+        switchingSession = true
+        input?.setAcceptingInput(false)
+        pendingPasteAttempt = nil
+        pasteWarning = false
+        notice = ""
+        terminal?.attachedPlatformView?.resetStickyModifiers()
+        switchTask = Task { [weak self] in
+            guard let self else { return }
+            defer {
+                if lifecycle.owns(attempt) {
+                    switchingSession = false
+                    switchTask = nil
+                    input?.setAcceptingInput(isLive)
+                }
+            }
+            do {
+                // Drain already accepted input to its original destination before
+                // switching; new input is disabled rather than deferred.
+                await input?.waitForDrain()
+                guard lifecycle.owns(attempt), isLive, !Task.isCancelled else { return }
+                try await connection.switchTmuxSession(to: session.name, from: source, executable: tmuxPath)
+                guard lifecycle.owns(attempt), isLive, !Task.isCancelled else { return }
+                sessionName = session.name
+                observedSession = session.name
+                activeIntent = .attach(name: session.name)
+                createSession = false
+                saveSession()
+                lifecycle.note("native session switch confirmed")
+                persistDiagnostics()
+            } catch is CancellationError {
+                // A late completion must never change a newer connection's target.
+            } catch {
+                guard lifecycle.owns(attempt), isLive else { return }
+                notice =
+                    "Session switch was not confirmed. Reconnect target unchanged. Refresh the session list and try again."
+                lifecycle.note("native session switch unconfirmed")
+                persistDiagnostics()
+            }
+            if lifecycle.owns(attempt), isLive, !Task.isCancelled { await listSessions() }
         }
-        disconnect()
-        sessionName = session.name
-        createSession = false
-        listedSessions = []
-        listedAttempt = nil
-        connect(trigger: "native session selection")
         return true
+    }
+
+    func updateSessionSwipe(_ phase: TerminalSessionSwipe.Phase, delta: CGPoint, velocity: CGFloat, width: CGFloat) {
+        guard canSwipeSessions else {
+            swipePreview = nil
+            input?.setAcceptingInput(isLive && !switchingSession)
+            return
+        }
+        switch phase {
+        case .began:
+            input?.setAcceptingInput(false)
+            guard let source = observedSession else { return }
+            swipePreview = SessionSwipePreview(
+                source: source, target: SessionSwipe.target(in: listedSessions, current: source, x: delta.x),
+                next: delta.x < 0, progress: 0)
+        case .changed:
+            if var preview = swipePreview {
+                let sameDirection = (delta.x < 0) == preview.next
+                preview.progress = sameDirection ? min(1, abs(delta.x) / SessionSwipe.threshold(width: width)) : 0
+                swipePreview = preview
+            }
+        case .ended:
+            input?.setAcceptingInput(true)
+            let preview = swipePreview
+            swipePreview = nil
+            guard let preview, let target = preview.target, observedSession == preview.source,
+                (delta.x < 0) == preview.next,
+                SessionSwipe.commits(x: delta.x, y: delta.y, velocityX: velocity, width: width)
+            else { return }
+            _ = attachListedSession(target)
+        case .cancelled:
+            swipePreview = nil
+            input?.setAcceptingInput(true)
+        }
     }
 
     func editConnection() {
@@ -593,7 +682,7 @@ final class RemoteTerminalModel: ObservableObject {
         }
     }
     func pasteDraft() {
-        guard isLive else { return }
+        guard canSendInput else { return }
         if draft.unicodeScalars.contains(where: {
             CharacterSet.controlCharacters.contains($0) && $0 != "\n" && $0 != "\t"
         }) {
@@ -604,7 +693,7 @@ final class RemoteTerminalModel: ObservableObject {
         pasteWarning = true
     }
     func confirmPaste() {
-        guard isLive, pendingPasteAttempt == lifecycle.attemptID, let terminal else {
+        guard canSendInput, pendingPasteAttempt == lifecycle.attemptID, let terminal else {
             notice = "Connection changed. Inspect the terminal and request paste again."
             return
         }
@@ -639,12 +728,19 @@ struct RemoteTerminalScreen: View {
             } else if !model.isLive {
                 connectionBanner
             }
+            if model.isLive && model.notice.hasPrefix("Session switch") {
+                Text(model.notice).font(.caption).padding(8)
+                    .accessibilityIdentifier("session.switch.error")
+            }
             if model.unlocked, let terminal = model.terminal {
                 TerminalSurfaceView(context: terminal)
                     // The pinned wrapper assigns its UIKit delegate only in makeUIView.
                     // A new remote surface must not reuse the previous attempt's view.
                     .id(ObjectIdentifier(terminal))
                     .allowsHitTesting(model.isLive && phase == .active)
+                    .overlay(alignment: model.swipePreview?.next == true ? .trailing : .leading) {
+                        if let preview = model.swipePreview { SessionSwipePreviewView(preview: preview) }
+                    }
             } else if model.unlocked {
                 Form {
                     TextField("Tailnet hostname or IP", text: $model.host)
@@ -687,7 +783,7 @@ struct RemoteTerminalScreen: View {
                 TmuxSessionsPanel(
                     sessions: model.listedSessions, loading: model.listingSessions,
                     error: model.sessionListError, reconnectTarget: model.sessionName,
-                    canSelect: model.isLive && !model.listingSessions,
+                    canSelect: model.isLive && !model.listingSessions && !model.switchingSession,
                     select: { if model.attachListedSession($0) { showingSessions = false } },
                     refresh: { sessionRefresh = UUID() },
                     close: { showingSessions = false },
@@ -701,8 +797,12 @@ struct RemoteTerminalScreen: View {
         }
         .overlay { if phase != .active { Color.black.ignoresSafeArea() } }
         .onChange(of: phase) { _, value in
+            if value != .active { model.updateSessionSwipe(.cancelled, delta: .zero, velocity: 0, width: 0) }
             if value != .active { showingSessions = false }
             model.phaseChanged(value)
+        }
+        .onChange(of: composing || showingSessions || showingDetails || showingSessionHelp) { _, presented in
+            model.sessionNavigationPresented = presented
         }
         .onChange(of: model.lifecycle.attemptID) { _, _ in showingSessions = false }
         .onChange(of: model.unlocked) { _, unlocked in
@@ -802,8 +902,8 @@ struct RemoteTerminalScreen: View {
                                 .caption)
                         TextEditor(text: $model.draft).accessibilityLabel("Prompt draft")
                         if !model.notice.isEmpty { Text(model.notice).font(.caption).lineLimit(2) }
-                        Button("Paste without added Enter") { model.pasteDraft() }.disabled(!model.isLive)
-                        Button("Enter key") { model.terminal?.sendKey(.enter) }.disabled(!model.isLive)
+                        Button("Paste without added Enter") { model.pasteDraft() }.disabled(!model.canSendInput)
+                        Button("Enter key") { model.terminal?.sendKey(.enter) }.disabled(!model.canSendInput)
                     }.padding().navigationTitle("Compose")
                         .overlay {
                             if !model.unlocked || phase != .active { Color.black.ignoresSafeArea() }
@@ -848,23 +948,19 @@ struct RemoteTerminalScreen: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             if model.unlocked {
                 if let terminal = model.terminal {
-                    TerminalKeyboardButton(terminal: terminal, enabled: model.isLive)
+                    TerminalKeyboardButton(terminal: terminal, enabled: model.canSendInput)
                 }
-                Menu {
-                    Button("Switch Session") {
-                        dismissKeyboard()
-                        showingSessions = true
-                    }
-                    .disabled(!model.isLive || !model.useTmux)
-                    Button("Send Ctrl-B") { sendTmuxPrefix(switchSession: false) }
-                        .disabled(!model.isLive)
-                    if model.useTmux { Text("Reconnect target: \(model.sessionName)") }
-                    Button("How to Attach from Mac") { showSessionHelp() }
-                        .accessibilityIdentifier("remote.sessionHelp")
+                Button {
+                    dismissKeyboard()
+                    showingSessions = true
                 } label: {
-                    Text("tmux").frame(minWidth: 44, minHeight: 44)
+                    HStack(spacing: 3) {
+                        Text("Sessions").font(.callout)
+                        Image(systemName: "chevron.down").font(.caption2)
+                    }.frame(minWidth: 44, minHeight: 44)
                 }
-                .accessibilityLabel("tmux actions")
+                .accessibilityLabel("Switch Session")
+                .disabled(!model.isLive || !model.useTmux || model.switchingSession)
                 Button {
                     dismissKeyboard()
                     composing = true
@@ -872,6 +968,11 @@ struct RemoteTerminalScreen: View {
                     Image(systemName: "square.and.pencil").frame(minWidth: 44, minHeight: 44)
                 }.accessibilityLabel("Compose")
                 Menu {
+                    Button("Send Ctrl-B") { sendTmuxPrefix(switchSession: false) }
+                        .disabled(!model.canSendInput)
+                    Button("How to Attach from Mac") { showSessionHelp() }
+                        .accessibilityIdentifier("remote.sessionHelp")
+                    if model.useTmux { Text("Reconnect target: \(model.sessionName)") }
                     Button("Connection Details") {
                         dismissKeyboard()
                         showingDetails = true
@@ -891,6 +992,7 @@ struct RemoteTerminalScreen: View {
 
     private var compactStatus: String {
         if !model.unlocked { return model.status }
+        if model.switchingSession { return "Switching session…" }
         switch model.lifecycle.state {
         case .failed: return "Disconnected"
         case .disconnected: return "Disconnected"
@@ -932,7 +1034,7 @@ struct RemoteTerminalScreen: View {
 
     private func sendTmuxPrefix(switchSession: Bool) {
         // Synchronous deliberate key events. No timers, shell commands or input queue.
-        guard model.isLive, phase == .active, let view = model.terminal?.attachedPlatformView else { return }
+        guard model.canSendInput, phase == .active, let view = model.terminal?.attachedPlatformView else { return }
         view.resetStickyModifiers()
         guard view.sendKey(.b, modifiers: .ctrl) else { return }
         if switchSession { view.sendKey(.s) }
@@ -964,7 +1066,7 @@ struct TerminalSelectionSnapshot: Identifiable {
     let anchor: NSRange?
 }
 
-private struct TerminalSelectionText: UIViewRepresentable {
+struct TerminalSelectionText: UIViewRepresentable {
     let snapshot: TerminalSelectionSnapshot
 
     func makeUIView(context: Context) -> UITextView {

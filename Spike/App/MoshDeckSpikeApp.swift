@@ -62,12 +62,14 @@ struct MoshDeckSpikeApp: App {
 @MainActor
 final class PlainTextTerminalView: TerminalView {
     var acceptsTerminalInput: @MainActor () -> Bool = { true }
+    private(set) var sessionSwipe: TerminalSessionSwipe?
     private lazy var mobileAccessory = TerminalKeyboardAccessory(terminal: self)
 
     override var inputAccessoryView: UIView? { mobileAccessory }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
+        sessionSwipe = TerminalSessionSwipe(view: self)
         for interaction in interactions where interaction is UIDropInteraction {
             removeInteraction(interaction)
         }
@@ -96,6 +98,13 @@ final class PlainTextTerminalView: TerminalView {
         @Published var result = "Fixture not run"
         @Published var draft = "Inspect the current module.\nExplain the next change."
         @Published var keyResult = "Keys not checked"
+        @Published var swipeSession = "work"
+        @Published var swipePreview: SessionSwipePreview?
+        var gesturesEnabled = true
+        @Published var selection: TerminalSelectionSnapshot?
+        @Published var scrollCheck = "Scroll not checked"
+        private var beforeScroll: String?
+        private let swipeSessions = (try? TmuxSessionListing.parse(Data("infra|1|0\nwork|2|2\n".utf8))) ?? []
 
         init() {
             TerminalDebugLog.disable()
@@ -104,12 +113,51 @@ final class PlainTextTerminalView: TerminalView {
             session = InMemoryTerminalSession(write: { capture.append($0) }, resize: { _ in })
             terminal = TerminalViewState(terminalConfiguration: safeTerminalConfiguration())
             terminal.configuration = TerminalSurfaceOptions(backend: .inMemory(session), fontSize: 14)
-            terminal.makePlatformView = { PlainTextTerminalView(frame: .zero) }
+            terminal.makePlatformView = { [weak self] in
+                let view = PlainTextTerminalView(frame: .zero)
+                view.sessionSwipe?.enabled = { [weak self] in self?.gesturesEnabled == true && self?.selection == nil }
+                view.sessionSwipe?.update = { [weak self] phase, delta, velocity, width in
+                    guard let self else { return }
+                    switch phase {
+                    case .began:
+                        swipePreview = SessionSwipePreview(
+                            source: swipeSession,
+                            target: SessionSwipe.target(in: swipeSessions, current: swipeSession, x: delta.x),
+                            next: delta.x < 0, progress: 0)
+                    case .changed:
+                        swipePreview?.progress = min(1, abs(delta.x) / SessionSwipe.threshold(width: width))
+                    case .ended:
+                        if let preview = swipePreview, let target = preview.target,
+                            (delta.x < 0) == preview.next,
+                            SessionSwipe.commits(x: delta.x, y: delta.y, velocityX: velocity, width: width)
+                        {
+                            swipeSession = target.name
+                        }
+                        swipePreview = nil
+                    case .cancelled: swipePreview = nil
+                    }
+                }
+                return view
+            }
+            terminal.onTextSelectionRequest = { [weak self] request in
+                self?.selection = TerminalSelectionSnapshot(text: request.text, anchor: request.anchorRange)
+            }
             terminal.onClipboardConfirmationRequest = { request in
                 // Synthetic paste tests are intentional. Remote clipboard operations
                 // remain denied. Production composer requires explicit validation.
                 request.respond(allow: request.kind == .paste)
             }
+        }
+
+        func prepareScroll() {
+            for row in 0..<120 { session.receive("Synthetic scroll row \(row)\r\n") }
+            session.waitForPendingOutput()
+            beforeScroll = session.readViewportText()
+            scrollCheck = "Scroll prepared"
+        }
+        func checkScroll() {
+            scrollCheck =
+                session.readViewportText() != beforeScroll ? "PASS: viewport scrolled" : "FAIL: viewport unchanged"
         }
 
         func checkAccessoryKeys() {
@@ -200,12 +248,21 @@ final class PlainTextTerminalView: TerminalView {
                     .font(.headline).padding(8)
                 Text(model.result).font(.caption)
                     .accessibilityIdentifier("fixture.result").padding(4)
+                Text(model.swipeSession).accessibilityIdentifier("fixture.swipe.session")
                 TerminalSurfaceView(context: model.terminal).accessibilityIdentifier("fixture.terminal")
+                    .overlay(alignment: .trailing) {
+                        if let preview = model.swipePreview { SessionSwipePreviewView(preview: preview) }
+                    }
                 HStack {
                     Button("Show Keyboard") { model.terminal.requestFocus() }
                     Button("Compose") { showComposer = true }
                     Button("Run fixture") { Task { await model.runChecks() } }
                     Button("Sessions") { showSessions = true }.accessibilityValue(sessionSelection)
+                }
+                HStack {
+                    Button("Scroll fixture") { model.prepareScroll() }
+                    Button("Check scrolling") { model.checkScroll() }
+                    Text(model.scrollCheck).font(.caption).accessibilityIdentifier("fixture.scroll")
                 }
                 HStack {
                     Button("Check key input") { model.checkAccessoryKeys() }
@@ -231,7 +288,20 @@ final class PlainTextTerminalView: TerminalView {
                     Color.black.ignoresSafeArea().overlay(Text("Terminal hidden").foregroundStyle(.white))
                 }
             }
-            .onChange(of: phase) { _, next in model.terminal.isSurfaceVisible = next == .active }
+            .onChange(of: phase) { _, next in
+                model.terminal.isSurfaceVisible = next == .active
+                model.gesturesEnabled = next == .active && !showComposer && !showSessions
+            }
+            .onChange(of: showComposer || showSessions) { _, presented in
+                model.gesturesEnabled = !presented && phase == .active
+            }
+            .sheet(item: $model.selection) { snapshot in
+                NavigationStack {
+                    TerminalSelectionText(snapshot: snapshot)
+                        .navigationTitle("Select terminal text")
+                        .toolbar { Button("Done") { model.selection = nil } }
+                }
+            }
             .sheet(isPresented: $showComposer) {
                 NavigationStack {
                     VStack {

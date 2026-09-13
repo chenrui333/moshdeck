@@ -31,10 +31,6 @@ struct TmuxSessionsPanel: View {
                     }.padding(.leading)
                     List {
                         Section {
-                            Text(
-                                "Selecting updates the reconnect target. Mac clients stay attached."
-                            )
-                            .font(.footnote)
                             Text("Reconnect target: \(reconnectTarget)").font(.footnote)
                         }
                         if loading {
@@ -62,6 +58,10 @@ struct TmuxSessionsPanel: View {
                                 .accessibilityIdentifier("session.option.\(session.name)")
                         }
                         Section {
+                            Text("Swipe left or right in the terminal to switch adjacent sessions in this order.")
+                                .font(.footnote)
+                            Text("A confirmed switch updates the reconnect target. Mac clients stay attached.")
+                                .font(.footnote)
                             Button("Open terminal picker (Ctrl-B, s)", action: terminalPicker)
                                 .disabled(!canSelect)
                         }

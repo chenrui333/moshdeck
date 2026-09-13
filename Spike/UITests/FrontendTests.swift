@@ -158,6 +158,56 @@ final class FrontendTests: XCTestCase {
     }
 
     @MainActor
+    func testInteractiveSessionSwipeAndVerticalScroll() {
+        let app = XCUIApplication()
+        app.launch()
+        let result = app.staticTexts["fixture.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        expectation(for: NSPredicate(format: "label BEGINSWITH 'PASS:'"), evaluatedWith: result)
+        waitForExpectations(timeout: 30)
+        let terminal = app.descendants(matching: .any)["fixture.terminal"].firstMatch
+        XCTAssertTrue(terminal.exists)
+        let selected = app.staticTexts["fixture.swipe.session"]
+        XCTAssertEqual(selected.label, "work")
+        let middle = terminal.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        middle.press(
+            forDuration: 0.05, thenDragTo: middle.withOffset(CGVector(dx: 25, dy: 0)), withVelocity: .slow,
+            thenHoldForDuration: 0.3)
+        XCTAssertEqual(selected.label, "work", "A short drag must cancel")
+        middle.press(
+            forDuration: 0.05, thenDragTo: middle.withOffset(CGVector(dx: 5, dy: -150)), withVelocity: .slow,
+            thenHoldForDuration: 0.2)
+        XCTAssertEqual(selected.label, "work", "Vertical scrolling must not change sessions")
+        let left = terminal.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5))
+        let right = terminal.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5))
+        left.press(forDuration: 0.05, thenDragTo: right, withVelocity: .slow, thenHoldForDuration: 0.2)
+        XCTAssertEqual(selected.label, "infra")
+        left.press(forDuration: 0.05, thenDragTo: right, withVelocity: .slow, thenHoldForDuration: 0.2)
+        XCTAssertEqual(selected.label, "infra", "The first session must not wrap")
+        right.press(forDuration: 0.05, thenDragTo: left, withVelocity: .slow, thenHoldForDuration: 0.2)
+        XCTAssertEqual(selected.label, "work")
+        XCTAssertFalse(app.otherElements["session.swipe.preview"].exists)
+        app.buttons["Sessions"].tap()
+        XCTAssertTrue(app.buttons["session.option.infra"].waitForExistence(timeout: 5))
+        app.buttons["session.option.infra"].tap()
+        XCTAssertEqual(app.buttons["Sessions"].value as? String, "Selected infra")
+        app.buttons["Scroll fixture"].tap()
+        let scrollStart = terminal.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
+        let scrollEnd = terminal.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+        scrollStart.press(forDuration: 0.05, thenDragTo: scrollEnd, withVelocity: .slow, thenHoldForDuration: 0.2)
+        app.buttons["Check scrolling"].tap()
+        XCTAssertEqual(app.staticTexts["fixture.scroll"].label, "PASS: viewport scrolled")
+        XCTAssertEqual(selected.label, "work")
+        terminal.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.3)).press(forDuration: 1)
+        let selection = app.textViews["Terminal text for selection and copy"]
+        XCTAssertTrue(selection.waitForExistence(timeout: 5))
+        let selectionStart = selection.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
+        selectionStart.press(forDuration: 0.05, thenDragTo: selectionStart.withOffset(CGVector(dx: 170, dy: 0)))
+        app.buttons["Done"].tap()
+        XCTAssertEqual(selected.label, "work", "Selection interaction must not navigate")
+    }
+
+    @MainActor
     func testComposerDraftSurvivesThirtySecondBackground() {
         let app = XCUIApplication()
         app.launch()
