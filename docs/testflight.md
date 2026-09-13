@@ -96,3 +96,7 @@ Distribution export failed with **No Accounts** and **No signing certificate "iO
 The paired phone also remains unavailable to CoreDevice, so installation and physical testing of build 3 are still pending. These are separate gates: the development build can be installed once the phone is reachable; distribution export needs the signing account session. No build-3 IPA, upload, processing result or TestFlight assignment is claimed.
 
 The repository What to Test draft now describes build 3's compact layout and native panel. It has not been sent to App Store Connect and does not replace the existing build-1 localization remotely.
+
+### September 13 device update
+
+Development Release build 3 is now installed and launched on the iPhone 15 Pro Max. Fresh device diagnostics confirm an unlocked app and a connected attempt with interactive output. The native panel acceptance sequence remains pending. A distribution-export reattempt still failed with the account/signing-session errors above; nothing new was uploaded or assigned in TestFlight.

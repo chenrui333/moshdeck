@@ -53,3 +53,7 @@ Across these four mixed observations: min 2.044 s, median 2.369 s, max 5.572 s. 
 ## Release size baseline — 2026-09-07
 
 Unsigned arm64 Release build at `285bdf6`, using the pinned released Ghostty artifact: **18,165,878 bytes** for regular files in the app bundle; **17,713,216 bytes** for the main executable. This is local uncompressed build size, not App Store download size, installed-device storage or peak memory. The build was not executed on the phone. [Release audit data](release-link-audit.json) records hashes and build scope. No typing, CPU, memory, battery or thermal acceptance is inferred from these figures.
+
+## September 13 — build 3 initial physical connection
+
+One iPhone 15 Pro Max sample from sanitized lifecycle timestamps: manual connect at 11:25:32.245979 UTC to confirmed interactive output at 11:25:41.566029 UTC, **9.320 seconds**. App lock was already unlocked; this does not include device-owner authentication time. The sample follows installation/launch of build 3. Network path, relay/direct routing and time of reachability were not independently measured, so the duration cannot be attributed to the native layout or compared as a controlled regression. There are not enough comparable samples for a meaningful min/median/max distribution. No terminal content was captured.

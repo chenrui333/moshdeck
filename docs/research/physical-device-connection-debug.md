@@ -282,3 +282,13 @@ At that same observation, `work` had only its 171×47 iTerm2 client, shell PID `
 The layout-only development Release build 2 installed successfully earlier in this session. The subsequent native session panel candidate is build 3, source `91c96c6`. Its Release build and signature check passed, but installation failed with CoreDevice error 1011; a fresh inventory showed the iPhone unavailable. No native-panel physical result is recorded. Connect/unlock the phone, install build 3, then select two existing sessions from **tmux → Switch Session** and verify shared Mac input and selected-target recovery.
 
 At the installation checkpoint, Mac metadata still showed `work` pane `%1`, shell PID `36685`, and the original child Codex PID `39924`. No private terminal output was captured. Process survival does not establish successful phone selection, bidirectional control, detach behavior or layout usability.
+
+## Build 3 installed and connected — September 13, 2026
+
+CoreDevice again reported the paired iPhone 15 Pro Max available. The preserved Release application passed version/bundle/signature checks, installed as 0.0.1 (3), and launched successfully. The app retained its bundle identity and existing storage.
+
+A subsequent read of the app's sanitized diagnostics recorded attempt `5ED11E05-E79E-40A4-9B21-238C624498B9`, app lock `unlocked(until: nil)`, and connection state `connected`. Manual connect began at 11:25:32.245979 UTC; the interactive-output transition occurred at 11:25:41.566029 UTC, approximately **9.320 seconds** later. This is real-device connection/startup evidence for build 3, not proof that the owner has validated native selection or visual quality. No terminal text or prompt was collected.
+
+At the accompanying Mac check, `work` still contained pane `%1`, shell PID `36685`, and Codex PID `39924`. The owner was asked to open **tmux → Switch Session**, select `work`, switch to `moshdeck-switch-check`, and return to `work`. Selection accuracy, panel dismissal, visual stability and selected-target recovery remain pending that physical interaction/result.
+
+TestFlight export still failed with the previously recorded Xcode account/signing-session errors. That export gate does not prevent the installed development build from connecting.
