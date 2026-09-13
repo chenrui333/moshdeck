@@ -236,6 +236,50 @@ public actor SSHConnection {
         }
     }
 
+    /// Read-only metadata on a short-lived channel of this authenticated connection.
+    /// Failure/cancellation closes only that channel, never the interactive PTY.
+    public func listTmuxSessions(executable: String) async throws -> [TmuxSessionSummary] {
+        guard inputAllowed, !closed, parent.isActive else { throw SSHConnectionError.disconnected }
+        let command = try TmuxSessionListing.command(executable: executable)
+        let loop = parent.eventLoop
+        let completion = TmuxListCompletion(promise: loop.makePromise(of: [TmuxSessionSummary].self))
+        let cancellation = ConnectionCancellation()
+        let parent = self.parent
+        return try await withTaskCancellationHandler {
+            try Task.checkCancellation()
+            loop.execute {
+                let childPromise = loop.makePromise(of: Channel.self)
+                do {
+                    let handler = try parent.pipeline.syncOperations.handler(type: NIOSSHHandler.self)
+                    handler.createChannel(childPromise) { channel, kind in
+                        cancellation.register(channel)
+                        guard kind == .session else {
+                            return loop.makeFailedFuture(SSHConnectionError.invalidChannel)
+                        }
+                        return channel.pipeline.addHandler(TmuxListHandler(command: command, completion: completion))
+                    }
+                    childPromise.futureResult.whenFailure { completion.finish(.failure($0)) }
+                } catch { completion.finish(.failure(error)) }
+            }
+            let timeout = loop.scheduleTask(in: .seconds(5)) {
+                completion.finish(.failure(TmuxListingError.timedOut))
+                cancellation.cancel()
+            }
+            defer {
+                timeout.cancel()
+                cancellation.cancel()
+            }
+            let result = try await completion.promise.futureResult.get()
+            try Task.checkCancellation()
+            return result
+        } onCancel: {
+            loop.execute {
+                completion.finish(.failure(CancellationError()))
+                cancellation.cancel()
+            }
+        }
+    }
+
     public func close() async {
         guard !closed else { return }
         closed = true
@@ -520,5 +564,77 @@ private final class ConnectionCancellation: @unchecked Sendable {
         let value = channel
         lock.unlock()
         value?.close(promise: nil)
+    }
+}
+
+// All completion/handler mutations run on the parent's event loop.
+private final class TmuxListCompletion: @unchecked Sendable {
+    let promise: EventLoopPromise<[TmuxSessionSummary]>
+    private var finished = false
+    init(promise: EventLoopPromise<[TmuxSessionSummary]>) { self.promise = promise }
+    func finish(_ result: Result<[TmuxSessionSummary], Error>) {
+        guard !finished else { return }
+        finished = true
+        promise.completeWith(result)
+    }
+}
+
+private final class TmuxListHandler: ChannelInboundHandler {
+    typealias InboundIn = SSHChannelData
+    private let command: String
+    private let completion: TmuxListCompletion
+    private var data = Data()
+    private var totalBytes = 0
+    private var accepted = false
+    private var exitCode: Int?
+
+    init(command: String, completion: TmuxListCompletion) {
+        self.command = command
+        self.completion = completion
+    }
+    func channelActive(context: ChannelHandlerContext) {
+        context.triggerUserOutboundEvent(
+            SSHChannelRequestEvent.ExecRequest(command: command, wantReply: true), promise: nil)
+    }
+    func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
+        if event is ChannelSuccessEvent {
+            accepted = true
+        } else if let exit = event as? SSHChannelRequestEvent.ExitStatus {
+            exitCode = exit.exitStatus
+        } else if event is ChannelFailureEvent || event is SSHChannelRequestEvent.ExitSignal {
+            fail(context, SSHConnectionError.requestRejected)
+        } else {
+            context.fireUserInboundEventTriggered(event)
+        }
+    }
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+        let packet = unwrapInboundIn(data)
+        guard case .byteBuffer(let buffer) = packet.data else {
+            fail(context, TmuxListingError.invalidResponse)
+            return
+        }
+        totalBytes += buffer.readableBytes
+        guard totalBytes <= TmuxSessionListing.maximumBytes else {
+            fail(context, TmuxListingError.outputLimit)
+            return
+        }
+        // stderr is bounded and discarded; it may contain sensitive host text.
+        if packet.type == .channel { self.data.append(contentsOf: buffer.readableBytesView) }
+    }
+    func channelInactive(context: ChannelHandlerContext) {
+        guard accepted, let exitCode else {
+            completion.finish(.failure(SSHConnectionError.disconnected))
+            return
+        }
+        guard exitCode == 0 else {
+            completion.finish(.failure(TmuxListingError.remoteExit(exitCode)))
+            return
+        }
+        completion.finish(Result { try TmuxSessionListing.parse(data) })
+    }
+    func errorCaught(context: ChannelHandlerContext, error: Error) { fail(context, error) }
+    private func fail(_ context: ChannelHandlerContext, _ error: Error) {
+        completion.finish(.failure(error))
+        context.close(promise: nil)
     }
 }

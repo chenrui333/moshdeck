@@ -263,6 +263,52 @@
             }
         }
 
+        @Test func sessionListingUsesSeparateChannelAndPreservesTerminal() async throws {
+            let fixture = try OpenSSHFixture(allowExec: true)
+            defer { fixture.cleanup() }
+            try await fixture.start()
+            let output = ReceivedOutput()
+            var profile = fixture.profile
+            profile.intent = .diagnosticShell
+            let connection = try await SSHConnection.connect(
+                profile: profile, identity: fixture.identity, columns: 80, rows: 24,
+                output: { await output.append($0) })
+            let script = fixture.directory.appendingPathComponent("list-fixture")
+            func writeScript(_ body: String) throws {
+                try ("#!/bin/sh\n" + body + "\n").write(to: script, atomically: true, encoding: .utf8)
+                try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: script.path)
+            }
+            try writeScript("printf 'unique-session-marker|1|2\\n'")
+            let rows = try await connection.listTmuxSessions(executable: script.path)
+            #expect(rows.map(\.name) == ["unique-session-marker"])
+            #expect(rows.first?.attachedClients == 2)
+            #expect(!(await output.text()).contains("unique-session-marker"))
+            try writeScript("exit 7")
+            await #expect(throws: TmuxListingError.remoteExit(7)) {
+                try await connection.listTmuxSessions(executable: script.path)
+            }
+            try writeScript("head -c 40000 /dev/zero")
+            await #expect(throws: TmuxListingError.outputLimit) {
+                try await connection.listTmuxSessions(executable: script.path)
+            }
+            try writeScript("sleep 10")
+            await #expect(throws: TmuxListingError.timedOut) {
+                try await connection.listTmuxSessions(executable: script.path)
+            }
+            let request = Task { try await connection.listTmuxSessions(executable: script.path) }
+            try await Task.sleep(for: .milliseconds(100))
+            request.cancel()
+            do {
+                _ = try await request.value
+                Issue.record("Cancelled listing completed")
+            } catch { #expect(error is CancellationError) }
+            // The auxiliary failure and cancellation must not close the PTY.
+            try await connection.send(Data("echo TERMINAL_REMAINS_LIVE\r".utf8))
+            try await output.waitFor("TERMINAL_REMAINS_LIVE")
+            try await connection.checkLiveness()
+            await connection.close()
+        }
+
         @Test func missingTmuxSessionFailsWithoutReplacingIt() async throws {
             let candidates = ["/opt/homebrew/bin/tmux", "/usr/local/bin/tmux"]
             let executable = try #require(candidates.first { FileManager.default.isExecutableFile(atPath: $0) })
@@ -321,6 +367,21 @@
             await connection?.close()
             #expect(try tmux(["has-session", "-t", "=missing"]) != 0)
             #expect(try tmux(["has-session", "-t", "=retained"]) == 0)
+            #expect(try tmux(["new-session", "-d", "-s", "second", "exec /bin/sleep 600"]) == 0)
+            #expect(try tmux(["new-session", "-d", "-s", "中文", "exec /bin/sleep 600"]) == 0)
+            profile.intent = .attach(name: "retained")
+            let retainedOutput = ReceivedOutput()
+            let retained = try await SSHConnection.connect(
+                profile: profile, identity: fixture.identity, columns: 80, rows: 24,
+                output: { await retainedOutput.append($0) })
+            try await retainedOutput.waitFor("retained")
+            let sessions = try await retained.listTmuxSessions(executable: wrapper.path)
+            #expect(sessions.map(\.name) == ["retained", "second", "中文"])
+            #expect(sessions.last?.canAttach == false)
+            #expect(sessions.first?.attachedClients == 1)
+            await retained.close()
+            #expect(try tmux(["has-session", "-t", "=retained"]) == 0)
+
         }
 
         @Test(arguments: [1024, 10 * 1024, 50 * 1024])
@@ -342,7 +403,8 @@
             wire.append(payload)
             wire.append(Data("\u{1b}[201~".utf8))
             let expected = SHA256.hash(data: wire).map { String(format: "%02x", $0) }.joined()
-            let command = "stty raw -echo; printf 'INPUT_%s\\n' READY; "
+            let command =
+                "stty raw -echo; printf 'INPUT_%s\\n' READY; "
                 + "/bin/dd bs=1 count=\(wire.count) 2>/dev/null | /usr/bin/shasum -a 256; "
                 + "stty sane; printf 'INPUT_%s\\n' DONE\r"
             try await connection.send(Data(command.utf8))
