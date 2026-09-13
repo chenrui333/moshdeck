@@ -314,7 +314,11 @@ final class RemoteTerminalModel: ObservableObject {
                         }
                     })
                 let surface = TerminalViewState(terminalConfiguration: safeTerminalConfiguration())
-                surface.makePlatformView = { PlainTextTerminalView(frame: .zero) }
+                surface.makePlatformView = { [weak self] in
+                    let view = PlainTextTerminalView(frame: .zero)
+                    view.acceptsTerminalInput = { [weak self] in self?.isLive == true }
+                    return view
+                }
                 surface.configuration = .init(backend: .inMemory(session), fontSize: 14)
                 surface.onClipboardConfirmationRequest = { $0.respond(allow: false) }
                 surface.onTextSelectionRequest = { [weak self] request in

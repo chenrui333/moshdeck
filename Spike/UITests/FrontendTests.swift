@@ -79,23 +79,52 @@ final class FrontendTests: XCTestCase {
     }
 
     @MainActor
-    func testTerminalKeyboardDismissalAndExpansion() {
+    func testTerminalAccessoryKeysDismissalAndRotation() {
         let app = XCUIApplication()
         app.launch()
-        app.tabBars.buttons["Fixture"].tap()
-        XCTAssertTrue(app.staticTexts["fixture.result"].waitForExistence(timeout: 15))
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45)).tap()
+        let result = app.staticTexts["fixture.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        expectation(for: NSPredicate(format: "label BEGINSWITH 'PASS:'"), evaluatedWith: result)
+        waitForExpectations(timeout: 30)
+        app.buttons["Show Keyboard"].tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        let control = app.buttons["Control"]
+        XCTAssertEqual(control.value as? String, "Off")
+        control.tap()
+        XCTAssertEqual(control.value as? String, "Armed for next key")
+        app.typeText("c")
+        XCTAssertEqual(control.value as? String, "Off")
+        for label in ["Escape", "Tab", "Up Arrow", "Down Arrow", "Left Arrow", "Right Arrow"] {
+            let key = app.buttons[label]
+            XCTAssertTrue(key.isHittable, label)
+            XCTAssertGreaterThanOrEqual(key.frame.width, 44)
+            XCTAssertGreaterThanOrEqual(key.frame.height, 44)
+            key.tap()
+        }
+        control.tap()
+        app.buttons["Hide Keyboard"].tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        app.buttons["Check key input"].tap()
+        XCTAssertEqual(app.staticTexts["fixture.keys"].label, "PASS: accessory bytes")
+        for _ in 0..<3 {
+            app.buttons["Show Keyboard"].tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            XCTAssertEqual(control.value as? String, "Off")
+            app.buttons["Hide Keyboard"].tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        }
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.buttons["Show Keyboard"].tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Hide Keyboard"].isHittable)
         app.buttons["Hide Keyboard"].tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         XCTAssertTrue(app.tabBars.buttons["SSH"].isHittable)
-        app.buttons["Expand terminal"].tap()
-        XCTAssertTrue(app.buttons["Restore controls"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["Hide Keyboard"].isHittable)
-        app.buttons["Restore controls"].tap()
-        XCTAssertTrue(app.tabBars.buttons["SSH"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.tabBars.buttons["SSH"].isHittable)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Synthetic layout after keyboard rotation"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
     }
 
     @MainActor

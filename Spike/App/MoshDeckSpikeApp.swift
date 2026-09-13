@@ -9,32 +9,19 @@ struct MoshDeckSpikeApp: App {
         @State private var selectedTab =
             ProcessInfo.processInfo.environment["MOSHDECK_SPIKE_HOST"] == nil ? "fixture" : "ssh"
     #endif
-    @State private var expanded = false
     var body: some Scene {
         WindowGroup {
             Group {
                 #if DEBUG
                     TabView(selection: $selectedTab) {
                         TerminalHarness().tag("fixture").tabItem { Label("Fixture", systemImage: "terminal") }
-                            .toolbar(expanded ? .hidden : .visible, for: .tabBar)
-                        RemoteTerminalScreen(expanded: expanded).tag("ssh").tabItem {
+                        RemoteTerminalScreen().tag("ssh").tabItem {
                             Label("SSH", systemImage: "network")
                         }
-                        .toolbar(expanded ? .hidden : .visible, for: .tabBar)
                     }
                 #else
-                    RemoteTerminalScreen(expanded: expanded)
+                    RemoteTerminalScreen()
                 #endif
-            }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                HStack {
-                    Button(expanded ? "Restore controls" : "Expand terminal") { expanded.toggle() }
-                    Spacer()
-                    Button("Hide Keyboard", systemImage: "keyboard.chevron.compact.down") {
-                        UIApplication.shared.sendAction(
-                            #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                    }
-                }.font(.callout).padding(.horizontal).frame(minHeight: 44).background(.bar)
             }
             .onReceive(NotificationCenter.default.publisher(for: UIScene.willDeactivateNotification)) { notification in
                 if let scene = notification.object as? UIWindowScene { PrivacyCover.hide(scene) }
@@ -73,6 +60,11 @@ struct MoshDeckSpikeApp: App {
 // harness plain text and remove drop interactions supplied by the wrapper.
 @MainActor
 final class PlainTextTerminalView: TerminalView {
+    var acceptsTerminalInput: @MainActor () -> Bool = { true }
+    private lazy var mobileAccessory = TerminalKeyboardAccessory(terminal: self)
+
+    override var inputAccessoryView: UIView? { mobileAccessory }
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         for interaction in interactions where interaction is UIDropInteraction {
@@ -102,6 +94,7 @@ final class PlainTextTerminalView: TerminalView {
         private let capture: ByteCapture
         @Published var result = "Fixture not run"
         @Published var draft = "Inspect the current module.\nExplain the next change."
+        @Published var keyResult = "Keys not checked"
 
         init() {
             TerminalDebugLog.disable()
@@ -116,6 +109,12 @@ final class PlainTextTerminalView: TerminalView {
                 // remain denied. Production composer requires explicit validation.
                 request.respond(allow: request.kind == .paste)
             }
+        }
+
+        func checkAccessoryKeys() {
+            // Only the synthetic session is captured. Remote input is never recorded.
+            let expected = Data([3, 27, 9] + Array("\u{1b}[A\u{1b}[B\u{1b}[D\u{1b}[C".utf8))
+            keyResult = capture.take() == expected ? "PASS: accessory bytes" : "FAIL: accessory bytes"
         }
 
         func runChecks() async {
@@ -200,10 +199,13 @@ final class PlainTextTerminalView: TerminalView {
                     .accessibilityIdentifier("fixture.result").padding(4)
                 TerminalSurfaceView(context: model.terminal).accessibilityIdentifier("fixture.terminal")
                 HStack {
-                    Button("Esc") { model.terminal.sendKey(.escape) }
-                    Button("Ctrl-C") { model.terminal.sendKey(.c, modifiers: .ctrl) }
+                    Button("Show Keyboard") { model.terminal.requestFocus() }
                     Button("Compose") { showComposer = true }
                     Button("Run fixture") { Task { await model.runChecks() } }
+                }
+                HStack {
+                    Button("Check key input") { model.checkAccessoryKeys() }
+                    Text(model.keyResult).accessibilityIdentifier("fixture.keys")
                 }.buttonStyle(.bordered).padding(6)
             }
             .overlay {
