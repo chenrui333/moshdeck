@@ -44,6 +44,24 @@ final class FrontendTests: XCTestCase {
         XCTAssertEqual(app.staticTexts["remote.status"].value as? String, "Locked")
     }
 
+    // Execute with -configuration Release to verify the shipped navigation.
+    @MainActor
+    func testReleaseStartsLockedWithoutFixtureNavigation() throws {
+        #if DEBUG
+            throw XCTSkip("Requires the Release application and test configuration.")
+        #else
+            let app = XCUIApplication()
+            app.launch()
+            XCTAssertTrue(app.buttons["Unlock MoshDeck"].waitForExistence(timeout: 15))
+            XCTAssertFalse(app.tabBars.firstMatch.exists)
+            XCTAssertFalse(app.staticTexts["fixture.result"].exists)
+            XCTAssertFalse(app.buttons["Run fixture"].exists)
+            XCTAssertFalse(app.buttons["Connect"].exists)
+            XCTAssertFalse(app.textFields["Mac username"].exists)
+            XCTAssertEqual(app.staticTexts["remote.status"].value as? String, "Locked")
+        #endif
+    }
+
     @MainActor
     func testRealTerminalParserAndInputPaths() {
         let app = XCUIApplication()

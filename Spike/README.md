@@ -22,7 +22,9 @@ For runtime testing choose an available simulator/device destination in Xcode. A
 
 `swift test` starts an ephemeral loopback OpenSSH daemon using temporary keys and a forced disposable shell, then removes it. It does not edit the real SSH configuration or authorized_keys. The tmux script uses its own socket namespace and empty configuration; it never attaches to existing sessions.
 
-## Fixture tab
+## Fixture tab (Debug only)
+
+Release builds open the authenticated SSH screen directly and do not compile the synthetic fixture. Debug builds retain the Fixture/SSH tabs for frontend regression testing.
 
 The host-managed Ghostty surface receives synthetic ANSI/UTF-8 data. The fixture checks split input, alternate-screen restoration, Ctrl-C, bracketed large paste, and a distinct Enter key. The screenshot helps assess actual rendering but does not certify the full terminal-correctness matrix. No network or credentials are used by this tab.
 
