@@ -26,6 +26,20 @@ private actor InputSink {
 }
 
 struct TerminalInputPipeTests {
+    @Test func switchingDropsNewInputWithoutReplayingIt() async {
+        let sink = InputSink()
+        let pipe = TerminalInputPipe(failed: { Issue.record("Unexpected input failure") })
+        pipe.bind { await sink.send($0) }
+        pipe.enqueue(Data("before".utf8))
+        pipe.setAcceptingInput(false)
+        pipe.enqueue(Data("discard during switch".utf8))
+        await pipe.waitForDrain()
+        pipe.setAcceptingInput(true)
+        pipe.enqueue(Data("after".utf8))
+        await pipe.waitForDrain()
+        #expect(await sink.values() == [Data("before".utf8), Data("after".utf8)])
+        pipe.stop()
+    }
     @Test func stoppedAttemptCannotReplayQueuedOrOfflineInput() async throws {
         let old = InputSink()
         let replacement = InputSink()

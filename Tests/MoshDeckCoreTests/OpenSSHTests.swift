@@ -379,6 +379,36 @@
             #expect(sessions.map(\.name) == ["retained", "second", "中文"])
             #expect(sessions.last?.canAttach == false)
             #expect(sessions.first?.attachedClients == 1)
+            let otherOutput = ReceivedOutput()
+            let other = try await SSHConnection.connect(
+                profile: profile, identity: fixture.identity, columns: 120, rows: 30,
+                output: { await otherOutput.append($0) })
+            try await otherOutput.waitFor("retained")
+            var shellProfile = profile
+            shellProfile.intent = .diagnosticShell
+            let shell = try await SSHConnection.connect(
+                profile: shellProfile, identity: fixture.identity, columns: 80, rows: 24, output: { _ in })
+            await #expect(throws: TmuxListingError.remoteExit(72)) {
+                try await shell.tmuxSnapshot(executable: wrapper.path)
+            }
+            await shell.close()
+            let snapshot = try await retained.tmuxSnapshot(executable: wrapper.path)
+            #expect(snapshot.currentSession == "retained")
+            try await retained.switchTmuxSession(to: "second", from: "retained", executable: wrapper.path)
+            #expect(try await retained.tmuxSnapshot(executable: wrapper.path).currentSession == "second")
+            #expect(try await other.tmuxSnapshot(executable: wrapper.path).currentSession == "retained")
+            await #expect(throws: TmuxListingError.remoteExit(75)) {
+                try await retained.switchTmuxSession(to: "missing", from: "second", executable: wrapper.path)
+            }
+            #expect(try await retained.tmuxSnapshot(executable: wrapper.path).currentSession == "second")
+            await #expect(throws: TmuxListingError.remoteExit(74)) {
+                try await retained.switchTmuxSession(to: "retained", from: "wrong", executable: wrapper.path)
+            }
+            try await retained.switchTmuxSession(to: "retained", from: "second", executable: wrapper.path)
+            #expect(try await retained.tmuxSnapshot(executable: wrapper.path).currentSession == "retained")
+            try await retained.checkLiveness()
+            try await retained.resize(columns: 87, rows: 29)
+            await other.close()
             await retained.close()
             #expect(try tmux(["has-session", "-t", "=retained"]) == 0)
 

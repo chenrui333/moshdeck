@@ -240,9 +240,23 @@ public actor SSHConnection {
     /// Failure/cancellation closes only that channel, never the interactive PTY.
     public func listTmuxSessions(executable: String) async throws -> [TmuxSessionSummary] {
         guard inputAllowed, !closed, parent.isActive else { throw SSHConnectionError.disconnected }
-        let command = try TmuxSessionListing.command(executable: executable)
+        return try TmuxSessionListing.parse(await executeMetadata(TmuxSessionListing.command(executable: executable)))
+    }
+
+    public func tmuxSnapshot(executable: String) async throws -> TmuxClientSnapshot {
+        try TmuxClientSnapshot.parse(await executeMetadata(TmuxClientCommand.snapshot(executable: executable)))
+    }
+
+    public func switchTmuxSession(to name: String, from source: String, executable: String) async throws {
+        let reply = try await executeMetadata(
+            TmuxClientCommand.switchSession(to: name, from: source, executable: executable))
+        guard reply == Data((name + "\n").utf8) else { throw TmuxListingError.invalidResponse }
+    }
+
+    private func executeMetadata(_ command: String) async throws -> Data {
+        guard inputAllowed, !closed, parent.isActive else { throw SSHConnectionError.disconnected }
         let loop = parent.eventLoop
-        let completion = TmuxListCompletion(promise: loop.makePromise(of: [TmuxSessionSummary].self))
+        let completion = MetadataCompletion(promise: loop.makePromise(of: Data.self))
         let cancellation = ConnectionCancellation()
         let parent = self.parent
         return try await withTaskCancellationHandler {
@@ -256,7 +270,7 @@ public actor SSHConnection {
                         guard kind == .session else {
                             return loop.makeFailedFuture(SSHConnectionError.invalidChannel)
                         }
-                        return channel.pipeline.addHandler(TmuxListHandler(command: command, completion: completion))
+                        return channel.pipeline.addHandler(MetadataHandler(command: command, completion: completion))
                     }
                     childPromise.futureResult.whenFailure { completion.finish(.failure($0)) }
                 } catch { completion.finish(.failure(error)) }
@@ -568,27 +582,27 @@ private final class ConnectionCancellation: @unchecked Sendable {
 }
 
 // All completion/handler mutations run on the parent's event loop.
-private final class TmuxListCompletion: @unchecked Sendable {
-    let promise: EventLoopPromise<[TmuxSessionSummary]>
+private final class MetadataCompletion: @unchecked Sendable {
+    let promise: EventLoopPromise<Data>
     private var finished = false
-    init(promise: EventLoopPromise<[TmuxSessionSummary]>) { self.promise = promise }
-    func finish(_ result: Result<[TmuxSessionSummary], Error>) {
+    init(promise: EventLoopPromise<Data>) { self.promise = promise }
+    func finish(_ result: Result<Data, Error>) {
         guard !finished else { return }
         finished = true
         promise.completeWith(result)
     }
 }
 
-private final class TmuxListHandler: ChannelInboundHandler {
+private final class MetadataHandler: ChannelInboundHandler {
     typealias InboundIn = SSHChannelData
     private let command: String
-    private let completion: TmuxListCompletion
+    private let completion: MetadataCompletion
     private var data = Data()
     private var totalBytes = 0
     private var accepted = false
     private var exitCode: Int?
 
-    init(command: String, completion: TmuxListCompletion) {
+    init(command: String, completion: MetadataCompletion) {
         self.command = command
         self.completion = completion
     }
@@ -630,7 +644,7 @@ private final class TmuxListHandler: ChannelInboundHandler {
             completion.finish(.failure(TmuxListingError.remoteExit(exitCode)))
             return
         }
-        completion.finish(Result { try TmuxSessionListing.parse(data) })
+        completion.finish(.success(data))
     }
     func errorCaught(context: ChannelHandlerContext, error: Error) { fail(context, error) }
     private func fail(_ context: ChannelHandlerContext, _ error: Error) {

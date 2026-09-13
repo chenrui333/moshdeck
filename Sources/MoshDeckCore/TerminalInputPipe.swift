@@ -9,6 +9,7 @@ public final class TerminalInputPipe: @unchecked Sendable {
     public typealias Sender = @Sendable (Data) async throws -> Void
     private var sender: Sender?
     private var active = true
+    private var acceptingInput = true
     private var draining = false
     private var idleWaiters: [CheckedContinuation<Void, Never>] = []
     private let failed: @Sendable () -> Void
@@ -30,7 +31,7 @@ public final class TerminalInputPipe: @unchecked Sendable {
 
     public func enqueue(_ data: Data) {
         lock.lock()
-        guard active else {
+        guard active, acceptingInput else {
             lock.unlock()
             return
         }
@@ -48,6 +49,14 @@ public final class TerminalInputPipe: @unchecked Sendable {
         if start { draining = true }
         lock.unlock()
         if start { startDrain() }
+    }
+
+    /// A session switch can finish already accepted writes while dropping new
+    /// input. Re-enabling never replays input received during this interval.
+    public func setAcceptingInput(_ enabled: Bool) {
+        lock.lock()
+        acceptingInput = enabled
+        lock.unlock()
     }
 
     public func stop() {
