@@ -91,7 +91,7 @@ Source `91c96c6` includes the native tmux side panel and sets version 0.0.1 (3).
 
 The signed Release archive completed successfully. Its application identifies as 0.0.1 (3), retains the existing bundle identifier and includes its icons. Strict signature verification passed; all 10 repository notice files match their bundled copies. Synthetic fixture markers and gettext imports are absent from the archived executable. Executable SHA-256: `ef7c879f78eaac0a52e808a67a11c553fb9f43bb7edfb8780041ba59ce99a987`. This verifies the archived application, not an exported distribution IPA.
 
-Distribution export failed with **No Accounts** and **No signing certificate "iOS Distribution" found**. Inspection of the prior successful export confirms that it used Apple's remote/cloud-managed Distribution signing, while the local keychain currently exposes one Apple Development identity. The Apple ID entry remains configured in Xcode preferences, but the failing export could not obtain a usable account session. No certificate was created, revoked or replaced. The owner was asked to refresh the Xcode account session before export is retried.
+Distribution export failed with **No Accounts** and **No signing certificate "iOS Distribution" found**. Inspection of the prior successful export confirms that it used Apple's remote/cloud-managed Distribution signing, while the local keychain currently exposes one Apple Development identity. The initial preference check established only that the Apple ID list key existed; it did not establish that an account was configured. A subsequent inspection found that its account array was empty. No certificate was created, revoked or replaced. The owner was asked to refresh the Xcode account session before export is retried.
 
 The paired phone also remains unavailable to CoreDevice, so installation and physical testing of build 3 are still pending. These are separate gates: the development build can be installed once the phone is reachable; distribution export needs the signing account session. No build-3 IPA, upload, processing result or TestFlight assignment is claimed.
 
@@ -100,3 +100,7 @@ The repository What to Test draft now describes build 3's compact layout and nat
 ### September 13 device update
 
 Development Release build 3 is now installed and launched on the iPhone 15 Pro Max. Fresh device diagnostics confirm an unlocked app and a connected attempt with interactive output. The native panel acceptance sequence remains pending. A distribution-export reattempt still failed with the account/signing-session errors above; nothing new was uploaded or assigned in TestFlight.
+
+### Signing blocker clarification — September 13
+
+A structural inspection of Xcode's `DVTDeveloperAccountManagerAppleIDLists` preference found one dictionary entry containing an **empty account array**. No account credentials or scalar values were printed. This corrects the earlier inference from the mere presence of that preference key: there is no configured Apple ID in this list for automatic/cloud-managed distribution signing. Add the owner account through Xcode → Settings → Accounts before retrying export. The prior successful cloud-signing export remains valid historical evidence; no new Distribution certificate or key should be created merely because the current local keychain lists only a Development identity.
