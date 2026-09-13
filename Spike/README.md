@@ -37,6 +37,17 @@ The host-managed Ghostty surface receives synthetic ANSI/UTF-8 data. The fixture
 
 The terminal transport has bounded queues, PTY resize, a foreground liveness check, structured stages and attempt-owned callbacks. Copy Diagnostics exports sanitized attempt timelines. See [lifecycle policy](../docs/research/connection-lifecycle.md). Backgrounding closes the connection and returning attempts a fresh authenticated attach. Runtime interruption schedules at most five foreground retries while the app remains unlocked. Initial and permanent failures require explicit retry. Wi-Fi/cellular recovery still needs physical measurement.
 
+## Mac session quick reference
+
+In a normal iTerm2 or Terminal tab:
+
+```sh
+tmux list-sessions
+tmux attach-session -t work
+```
+
+Use the same session name in MoshDeck. Start new persistent work inside `tmux new-session -A -s work` before launching your coding assistant; an existing process outside tmux cannot be adopted. When already inside tmux, Ctrl-B then S opens the session picker (on iPhone: tap Ctrl-B, type lowercase s, choose with arrows and Enter). Ctrl-B then D detaches a client without ending its remote work. Reconnect uses the saved profile target, not a session selected only through the live picker.
+
 ## Deliberate limits
 
 - One host profile, one terminal and composer draft. Profile/draft data now uses device-only Keychain storage; cold-launch restoration still requires physical acceptance.

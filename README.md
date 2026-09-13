@@ -41,6 +41,20 @@ codex
 
 In MoshDeck, enable **Use tmux**, set **Session** to `work`, and connect using the verified SSH profile. Both clients then address the same tmux pane and running process; input from either affects it. From another ordinary iTerm2 tab, use `tmux attach-session -t work`. Detach a client with Ctrl-B, then D; `exit` terminates a shell instead.
 
+### Everyday tmux commands
+
+Run these in an ordinary Mac terminal tab:
+
+```sh
+# See the available sessions.
+tmux list-sessions
+
+# Attach to the existing work session.
+tmux attach-session -t work
+```
+
+Replace `work` with a name from the list. Configure MoshDeck to use that same name. If you are already inside tmux, switch sessions with **Ctrl-B**, release, then **S**, or run `tmux switch-client -t work` at a shell prompt rather than nesting an attachment. On iPhone, tap the **Ctrl-B** accessory button, type lowercase **s**, select a session with arrows, and press Enter. Detach with **Ctrl-B**, then **D**; leave the process running.
+
 An existing process in an ordinary iTerm2 shell outside tmux cannot be adopted automatically. MoshDeck does not move local sessions or execute the coding assistant on the phone.
 
 Multiple Mac tmux sessions and switching through Ctrl-B, then S are part of the MVP workflow. Native MoshDeck tabs and multiple concurrent SSH connections are post-MVP. Current recovery returns to the saved profile's session, even if tmux's picker switched the live client elsewhere. See [MVP scope](docs/mvp.md), [beta setup](site/public/setup/index.html) and [physical acceptance evidence](docs/research/physical-device-connection-debug.md).
