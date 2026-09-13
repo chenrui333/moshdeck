@@ -62,6 +62,6 @@ Multiple Mac tmux sessions and switching through Ctrl-B, then S are part of the 
 
 ### Native session switching
 
-In the build-3 development candidate, connect and choose **tmux → Switch Session** to open the native side panel. Tap a listed session to reattach the phone and save that session as its reconnect target. Other Mac clients keep running. Native physical-device acceptance is pending; internal TestFlight build 1 does not contain this panel yet.
+The build-4 candidate supports **swipe left → next session**, **swipe right → previous session**, and a visible **Sessions ▾** picker. A drag previews the destination; release past the threshold to switch, or shorten the drag to cancel. Picker and gestures use the same alphabetical order without wrapping. A confirmed switch changes only the phone's tmux client and saves its reconnect target, retaining the SSH connection and terminal renderer. Other Mac clients keep running. Direct physical checks for this iteration were waived in favor of beta feedback; see [TestFlight status](docs/testflight.md) for the distributed build.
 
 Use `tmux new-session -d -s infra` at a shell prompt to create an additional session, then refresh the panel. Native selection is attach-only. The **Open terminal picker** fallback supports ordinary tmux navigation, but manual switches there do not update the saved reconnect target. One active phone terminal remains the supported model.

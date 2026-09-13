@@ -104,3 +104,16 @@ Development Release build 3 is now installed and launched on the iPhone 15 Pro M
 ### Signing blocker clarification — September 13
 
 A structural inspection of Xcode's `DVTDeveloperAccountManagerAppleIDLists` preference found one dictionary entry containing an **empty account array**. No account credentials or scalar values were printed. This corrects the earlier inference from the mere presence of that preference key: there is no configured Apple ID in this list for automatic/cloud-managed distribution signing. Add the owner account through Xcode → Settings → Accounts before retrying export. The prior successful cloud-signing export remains valid historical evidence; no new Distribution certificate or key should be created merely because the current local keychain lists only a Development identity.
+
+
+## Hybrid session-switch beta — build 4, September 13
+
+Source `2bc02fe` is archived as 0.0.1 (4), containing interactive horizontal session switching and a visible Sessions picker. The underlying switch uses only the existing phone tmux client and SSH transport. The owner explicitly waived direct hardware checks for this iteration and requested TestFlight distribution afterward; physical acceptance remains pending beta feedback.
+
+Verification passed: 40 core tests, the strengthened seven-test isolated OpenSSH suite, four targeted Debug simulator tests (swiping/scroll/selection, picker, keyboard/rotation, composer background draft), maximum Dynamic Type picker access, and Release locked startup without Fixture navigation. The Release simulator command requires `ARCHS=arm64 ONLY_ACTIVE_ARCH=YES` for the current arm64 terminal artifact; the first unrestricted command attempted unsupported x86_64 linkage and failed. This is not a physical-device result.
+
+The signed archive passed strict codesign verification; all 10 license notices match their repository sources, synthetic fixture markers are absent, and no gettext imports were found. Archived executable SHA-256: `963705b3b226f82eab6763c7c0727341ee44e1541409833c5baf0671cdc8d6a2`.
+
+**Upload blocked at distribution signing.** Supplying the existing API credential explicitly allowed a fresh ASC build query, which still returned only build 1 in VALID processing state. Xcode's supported API-key cloud-signing export was then attempted, but returned **Cloud signing permission error** and **No signing certificate "iOS Distribution" found** (exit 70). This refines the earlier No Accounts diagnosis: an API-key route exists, but the current credential could not cloud-sign this export. Xcode's configured account list remains empty; the owner was asked to sign in through Xcode Settings → Accounts. No certificate, API role, or account permissions were altered.
+
+There is no build-4 distribution IPA or upload yet. The build-4 What to Test text in `beta-test-notes.txt` is ready but has not been applied remotely. After signing is available, export the preserved archive, verify the IPA's version/bundle/signature and notices, reserve/inspect its upload with `asc builds upload --dry-run`, upload it, wait for processing, apply encryption metadata and test notes, and assign the existing internal Personal Beta group. Do not upload superseded build-2 or build-3 artifacts.

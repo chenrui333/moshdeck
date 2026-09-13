@@ -78,3 +78,10 @@ A fresh security-regression run stalled after the exact 1 MiB synthetic output t
 A termination-handler approach and then destructor-only cleanup passed test assertions but left fixture directories at runner exit. Every fixture-using test now calls explicit synchronous cleanup with `defer`; destruction provides a fallback. Cleanup requests server termination, closes the parent log handle and removes temporary credentials/configuration without `waitUntilExit`. Child processes retain their own open file descriptors. The full suite reported 32 tests passing (one opt-in skip) in 4.270 seconds. This changes only local test cleanup, not phone SSH/session lifetime.
 
 Three further serialized OpenSSH-suite runs passed with an independent assertion after each run that no newly created fixture directory remained. Orphans from the interrupted/unsuccessful cleanup experiments were removed after checking that their fixture daemons were absent.
+
+
+## Native session switching (build 4)
+
+Picker selection and horizontal paging now share `attachListedSession`, which invokes `SSHConnection.switchTmuxSession` through a bounded auxiliary exec channel. Despite the retained method name, this no longer disconnects/reattaches. ConnectionLifecycle stays connected, the existing Ghostty surface stays owned by the same attempt, and a separate switching flag disables new raw input/paste. Already accepted input drains before the switch; newly received input is dropped, never queued for another session.
+
+The target is persisted only after the switch command succeeds and returns the intended client session. Missing targets/source drift are nonfatal switch errors; metadata refreshes and the saved reconnect target remains unchanged. A timeout/lost reply leaves the remote outcome unconfirmed and is not automatically retried. New attempt ownership, lock and foreground checks prevent late completions from rewriting a newer connection. This path never creates a tmux session and never selects a client by most-recent activity.

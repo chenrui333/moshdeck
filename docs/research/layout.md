@@ -208,3 +208,42 @@ Current source matters more than copying another app: `RemoteTerminalModel.attac
 Opening, dragging or cancelling the panel must not change SSH state, session target or terminal input. Only explicit row selection should invoke the existing attachment operation. Closing via swipe, Close, outside tap and VoiceOver escape should be equivalent. Keep vertical list scrolling independent of horizontal dismissal; respect Reduce Motion. Gesture recognition must be confined to the terminal screen, excluding composer/settings sheets, keyboard and locked states. Edge gestures must not also deliver terminal scroll/mouse input.
 
 Before choosing final thresholds, test on the physical phone: ten open/close cycles with keyboard shown and hidden; vertical and diagonal terminal scrolls; text selection; panel list scrolling; interrupted drags; rotation; VoiceOver/button alternatives; and alternating between two named tmux sessions. Record missed/accidental activations, intended destination, taps/gestures, time to usable output and unchanged Mac processes. These are planned checks, not measured results. No native tabs, additional live terminals or connection-lifecycle changes are justified by this research.
+
+
+## Hybrid session switching — build 4, September 13, 2026
+
+**IMPLEMENTED — PHYSICAL VALIDATION PENDING.** The owner selected Option C (direct horizontal paging plus an explicit picker), superseding the edge-drawer recommendation above, and subsequently waived direct hardware checks for this iteration in favor of TestFlight beta feedback. This waiver is not a physical PASS or a declaration that the full daily-use MVP is complete.
+
+### Comparison and final implementation
+
+- Option A, edge drawer only, keeps named destinations but leaves the frequent switch as two steps and reserves a navigation edge. Not selected.
+- Option B, direct paging only, minimizes taps but omits a discoverable accessible route to arbitrary destinations. Not selected.
+- Option C, interactive drag plus a visible Sessions chip, provides both. Selected by the owner; local tests support implementation feasibility, while comfort and accidental-activation rates remain beta questions.
+
+[Blink's upstream shell-swiping documentation](https://github.com/blinksh/blink#using-blink) remains relevant precedent. [Apple's gesture guidance](https://developer.apple.com/design/human-interface-guidelines/gestures) supports retaining an explicit alternative. Neither source proves MoshDeck's implementation is comfortable on the phone. The picker is transient and consumes no permanent terminal width; there is no new sidebar navigation system or tab architecture.
+
+A direct-touch UIKit pan recognizer competes with Ghostty's existing direct-touch scroll pan. The scroll recognizer requires the navigation pan to fail. At recognition, horizontal velocity must dominate vertical velocity by 1.8×; UIKit's pan slop handles initial movement. Final displacement must also be horizontal, and reach max(90 pt, 28% of terminal width), or at least 40 pt with same-direction velocity of 900 pt/s. Short drags, reversal, cancellation and list boundaries perform no remote action. The metadata-only preview shows destination and progress; no second terminal is rendered. There is no gesture animation or repeated haptic feedback.
+
+The same alphabetical list supplies picker and gesture destinations, without wraparound. Unsupported names block paging at their boundary and remain available through the terminal picker. Metadata refreshes after connection, explicit refresh, a switch attempt, and eligible 20-second foreground liveness intervals. A drag freezes its source/destination; a changed remote source is rejected rather than silently switching relative to stale state. Navigation is disabled during reconnect, switching, list refresh, selection and modal editing.
+
+### Necessary change to the old picker
+
+The old picker disconnected and reattached. That could not satisfy the new requirement to preserve the SSH transport/renderer or remain attached when a target disappeared. Both UI paths now call the same confirmed switch operation. A bounded exec channel on the existing authenticated transport identifies the one tmux client descended from that OpenSSH connection's session process, then executes `switch-client -c` with an exact target. It never chooses the newest client or guesses from session name/terminal size.
+
+Identification walks at most eight process ancestors and requires an OpenSSH per-login process title. This is intentionally narrow macOS/OpenSSH compatibility; unusual process wrappers or servers whose process identity cannot be verified fail closed and retain the raw terminal-picker fallback. Process arguments, environment, terminal text and credentials are not read into diagnostics. Current session evidence comes from the matching row of `list-clients`, not generic `display-message` context.
+
+Input accepted before the switch drains to the old destination first; new input is dropped while previewing/switching, never buffered for the next session. Only a successful command plus matching returned session name updates the device-only reconnect target. A missing destination leaves the client attached, displays a nonfatal error and refreshes metadata. A lost acknowledgement is reported as unconfirmed: remote outcome can be ambiguous, saved target remains unchanged, and no mutating command is automatically retried. Lock/disconnect and attempt ownership still govern stale completions.
+
+### Verified checks
+
+| Check | Evidence | Result |
+| --- | --- | --- |
+| Core policy/input/lifecycle suites | 40 tests across seven suites, including direction, displacement, velocity, no wrap, malformed metadata and dropped switch-time input | PASS |
+| Real isolated OpenSSH/tmux integration | Two SSH clients on one tmux server; switch one, verify the other stays; reject wrong source/missing target; return; resize/liveness remain usable; shell-only login cannot select another login's client | PASS; local Mac, not physical phone/iTerm2 |
+| Interactive UIKit drag | Short cancel, both directions, no wrap, picker fallback, vertical scroll changes viewport, long-press selection and horizontal selection movement do not navigate | PASS; simulator, 24.361 s test duration |
+| Picker | Existing selection/dismissal test plus accessibility-extra-extra-extra-large text size after moving help below choices | PASS; simulator, 10.130 / 11.483 s |
+| Keyboard | Accessory bytes, sticky Ctrl reset, hide/show and rotation | PASS; simulator, 30.400 s |
+| Composer | Draft retained across 30-second background | PASS; simulator, 40.575 s |
+| Physical gesture comfort, Mac/iTerm2 isolation, live coding-agent survival, outage and selection behavior | Owner waived direct hardware checks for this iteration | NOT TESTED on build 4; beta feedback pending |
+
+Test durations include automation overhead and are not interaction latency measurements. No physical viewport, gesture latency or resource-use claim is inferred. The initial simulator run exposed both a TextView accessibility-query mismatch and a simulator left at maximum accessibility text size; the query was corrected and normal/large-type cases were run separately. The initial pan translation threshold prevented recognition; using directional velocity at recognition fixed this while preserving the larger release threshold.

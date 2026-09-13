@@ -1,15 +1,17 @@
-MoshDeck 0.0.1 (3) — early terminal beta
+MoshDeck 0.0.1 (4) — early terminal beta
 
 Use your own SSH host. The tested setup is an awake Mac with Remote Login, official Tailscale on both devices, and an existing tmux session. Authorize this phone's public key and independently verify the Mac's host key. MoshDeck has no account or cloud backend and does not embed Tailscale.
 
 Start work inside tmux on the Mac. Configure the phone to attach to that same named session. An ordinary iTerm2 tab outside tmux cannot be adopted automatically. Join the shared session on the Mac with: tmux attach-session -t SESSION_NAME
 
-New in build 3: a compact terminal header, a single keyboard accessory and a native session side panel. Fixture navigation and the expand/restore bar are removed from Release. Compose is directly accessible; connection details, diagnostics, Disconnect and Lock are in the overflow menu.
+New in build 4: interactive horizontal session paging plus a visible Sessions picker. Both switch only the phone tmux client, retaining its SSH connection and terminal. Direct hardware checks were waived for this iteration; physical gesture acceptance is the focus of this beta. Fixture navigation remains excluded from Release.
 
 Please test:
 - Unlock, connect, and run harmless shell commands. Use Esc, Tab, arrows and sticky Ctrl. For Ctrl-C, tap Ctrl and then c. Confirm Ctrl clears after a key and after dismissing the keyboard.
 - Hide/show the keyboard several times, rotate the phone, and check terminal readability, scrollback and clipping. Compare visible terminal rows with the keyboard open versus hidden.
-- Choose tmux → Switch Session. Refresh the native list, select an existing session, and verify the correct remote work appears. Select another existing session and return. Selection reattaches the phone and updates its reconnect target; it does not create a session or detach Mac clients.
+- Tap Sessions to choose any session. Swipe left for next or right for previous in the same alphabetical order. Watch the target preview; release past the threshold to switch, or shorten the drag to cancel. There is no wraparound.
+- Confirm vertical scrolling, long-press selection/copy, short accidental swipes and keyboard use do not switch sessions. During reconnect, swiping/sending must remain disabled without replaying input.
+- Keep iTerm2 on work while switching the phone elsewhere and back. The Mac must stay on work and its process must survive. If a destination disappears, the phone should report the failed switch and retain its attachment. Reconnect target changes only after confirmed success.
 - Use the terminal-picker fallback if needed. Manual switching inside tmux does not update the app's saved reconnect target. Names outside the current profile rules are shown but require this fallback.
 - Open Compose, edit a multiline prompt, dismiss/reopen it, and verify draft retention. Paste and Enter are separate actions; embedded newlines deserve care in a shell. Sending must be disabled during reconnect.
 - Switch apps, lock/unlock the phone, and change networks. Confirm recovery to the selected tmux session. At a shell prompt, echo $$ can help check shell PID continuity; do not send shell commands into an agent prompt.

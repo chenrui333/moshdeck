@@ -292,3 +292,8 @@ A subsequent read of the app's sanitized diagnostics recorded attempt `5ED11E05-
 At the accompanying Mac check, `work` still contained pane `%1`, shell PID `36685`, and Codex PID `39924`. The owner was asked to open **tmux → Switch Session**, select `work`, switch to `moshdeck-switch-check`, and return to `work`. Selection accuracy, panel dismissal, visual stability and selected-target recovery remain pending that physical interaction/result.
 
 TestFlight export still failed with the previously recorded Xcode account/signing-session errors. That export gate does not prevent the installed development build from connecting.
+
+
+## Build 4 hardware-check waiver — September 13
+
+The owner explicitly requested skipping direct hardware checks for the hybrid swipe/picker iteration and uploading a TestFlight beta after automated validation. No build-4 physical swipe, iTerm2 isolation, agent continuity or network/lock result is marked PASS. Simulator input/layout tests and isolated local OpenSSH/tmux client-isolation tests are recorded in `layout.md`; they are not substituted for phone evidence. Build 3 remains the last directly installed physical candidate. Distribution signing, not a failed hardware test, currently blocks the requested build-4 beta upload; see `../testflight.md`.

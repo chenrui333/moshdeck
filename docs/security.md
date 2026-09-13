@@ -150,3 +150,10 @@ Reviewed the current first-party Keychain, authentication, SSH verification, cli
 - App lock/scene cover and selection/draft concealment exist in source, but complete physical app-switcher, native Copy and VoiceOver acceptance remains pending. Source inspection cannot establish those visual outcomes.
 
 The native dependency audit also found linked LGPL libintl; see [license findings](research/licenses.md). Distribution/provenance review remains open. No credential leakage or host-verification bypass was found in the inspected first-party paths; this statement is limited to those paths and tests.
+
+
+## Client-specific switching (build 4)
+
+Native selection and swiping use exact tmux targets over a bounded auxiliary channel on the already verified SSH transport. On supported OpenSSH hosts, the client is identified by matching its bounded process-ancestor chain to the per-login OpenSSH process for that connection; exactly one match is required. An unidentifiable/ambiguous client fails closed instead of selecting another client's session. Only process IDs, executable names, tty identifiers and bounded session metadata are queried; process arguments and environment variables are not collected. This relies on the trusted host and its OpenSSH process layout, not a new authentication boundary.
+
+Dragging does not execute remote commands. Switching suppresses new input and clears pending paste confirmation; only confirmed success persists the reconnect target. A lost acknowledgement is explicitly uncertain, never an instruction to retry a potentially completed mutation. Mac-client isolation and foreign-client refusal passed isolated local SSH tests; physical acceptance was waived for this beta iteration and remains pending tester feedback.
