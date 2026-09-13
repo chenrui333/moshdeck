@@ -70,3 +70,10 @@ Final owner clarification for this checkpoint: recovery works and did not requir
 ## Latest definitive lifecycle evidence
 
 Automatic recovery is now verified for one measured 116.288-second background interval: foreground resume triggered SSH/tmux reattachment in 2.340 seconds with no additional unlock request. The five-minute unlock deadline later expired, the owner authenticated, and another automatic foreground resume restored tmux in 2.607 seconds. Original shell PID 89665 remained unchanged. These source-labelled events supersede earlier uncertainty about automatic versus manual recovery for these specific runs. They do not substitute for a continuous five-minute screen-lock or full outage test.
+
+
+## Shared-session discoverability — next build after 0.0.1 (1)
+
+Owner feedback: the app did not visibly explain which session was shared, how to attach from a Mac, or how to switch phone sessions. Added an unlocked-only session-help entry showing the **saved** tmux target (not claiming live-session discovery). Its sheet provides a validated, shell-quoted attach command using the existing SessionIntent encoder, Mac/phone marker checks, Ctrl-B/S picker instructions, detach semantics and the saved-target reconnect limitation. It introduces no session picker, extra SSH connection, server command execution or lifecycle change. Help is concealed while inactive and dismissed on relock.
+
+The change is source-only for the next build; installed phone/TestFlight 0.0.1 (1) remains unchanged. Three existing command-generation tests passed (including seven invalid-name cases), and the existing locked-SSH-screen simulator test executed once with zero failures. The first generic simulator build also requested x86_64 and failed because the pinned local Ghostty package supports arm64; the actual arm64 simulator build passed. Full help-sheet visual/VoiceOver/lock acceptance remains pending. Strict swift-format lint still flags a pre-existing OnlyOneTrailingClosureArgument finding in the enclosing view; comparison against HEAD with the same format configuration reproduced it.

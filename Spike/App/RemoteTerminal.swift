@@ -319,7 +319,8 @@ final class RemoteTerminalModel: ObservableObject {
                 surface.onClipboardConfirmationRequest = { $0.respond(allow: false) }
                 surface.onTextSelectionRequest = { [weak self] request in
                     guard let self, self.lifecycle.owns(id), self.isLive, self.unlocked,
-                        self.sceneActive else { return }
+                        self.sceneActive
+                    else { return }
                     self.selection = TerminalSelectionSnapshot(text: request.text, anchor: request.anchorRange)
                 }
                 candidate = surface
@@ -567,6 +568,7 @@ struct RemoteTerminalScreen: View {
     @Environment(\.scenePhase) private var phase
     @State private var composing = false
     @State private var confirmingClearDraft = false
+    @State private var showingSessionHelp = false
 
     var body: some View {
         VStack(spacing: 5) {
@@ -576,7 +578,13 @@ struct RemoteTerminalScreen: View {
             if !expanded || !model.isLive {
                 if !model.notice.isEmpty { Text(model.notice).font(.caption) }
                 Button("Copy Diagnostics") { model.copyDiagnostics() }
-                if model.unlocked { Button("Lock app") { model.lock() } }
+                if model.unlocked {
+                    Button("Lock app") { model.lock() }
+                    Button(model.useTmux ? "Saved session: \(model.sessionName) · Help" : "Shared session help") {
+                        showingSessionHelp = true
+                    }
+                    .accessibilityIdentifier("remote.sessionHelp")
+                }
                 if model.unlocked && !model.isLive && model.terminal != nil {
                     Button("Connection settings") { model.editConnection() }
                 }
@@ -642,10 +650,55 @@ struct RemoteTerminalScreen: View {
         .onChange(of: model.unlocked) { _, unlocked in
             if !unlocked {
                 composing = false
+                showingSessionHelp = false
                 model.selection = nil
             }
         }
 
+        .sheet(isPresented: $showingSessionHelp) {
+            NavigationStack {
+                List {
+                    Section("Attach from your Mac") {
+                        Text("Open a new iTerm2 or Terminal tab on the configured Mac and run this command:")
+                        if model.useTmux,
+                            let command = try? SessionIntent.attach(name: model.sessionName).command(
+                                tmuxExecutable: model.tmuxPath)
+                        {
+                            Text(command).font(.system(.body, design: .monospaced)).textSelection(.enabled)
+                        } else {
+                            Text(
+                                "Enable Use tmux and enter an existing session name and valid executable path in connection settings first."
+                            )
+                        }
+                        Text(
+                            "Start your coding assistant inside tmux. An existing process in an ordinary terminal tab outside tmux cannot be adopted automatically."
+                        )
+                    }
+                    Section("Switch sessions on iPhone") {
+                        Text(
+                            "Tap Ctrl-B once, then type lowercase s. Use the arrow keys to select a session in tmux's picker, then press Enter. Hide Keyboard gives the picker more room."
+                        )
+                        Text(
+                            "Switching in tmux does not change this app's saved session. Reconnect returns to the saved target. To use another target after reconnect, disconnect and change Session in connection settings."
+                        )
+                    }
+                    Section("Check shared control") {
+                        Text(
+                            "Both clients must select the same session and pane. At a shell prompt, type echo PHONE on the phone and echo MAC on the Mac. Each command and its output should appear on both screens. If a coding assistant is running, send a harmless prompt instead of a shell command."
+                        )
+                        Text(
+                            "To detach one client, press Ctrl-B, release, then D. The other client and remote process stay attached/running. The exit command ends a shell; it is not a detach command."
+                        )
+                    }
+                }
+                .navigationTitle("Shared sessions")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { Button("Done") { showingSessionHelp = false } }
+                .overlay {
+                    if !model.unlocked || phase != .active { Color.black.ignoresSafeArea() }
+                }
+            }
+        }
         .sheet(item: $model.selection) { snapshot in
             NavigationStack {
                 TerminalSelectionText(snapshot: snapshot)
@@ -717,7 +770,8 @@ private struct TerminalSelectionText: UIViewRepresentable {
         let length = (snapshot.text as NSString).length
         if let anchor = snapshot.anchor, anchor.location >= 0, anchor.length >= 0,
             anchor.location <= length,
-            anchor.length <= length - anchor.location {
+            anchor.length <= length - anchor.location
+        {
             view.selectedRange = anchor
         } else {
             view.selectedRange = NSRange(location: 0, length: length)
