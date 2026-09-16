@@ -859,10 +859,13 @@ struct RemoteTerminalScreen: View {
                     }
                     Section("Switch sessions on iPhone") {
                         Text(
-                            "Tap Ctrl-B once, then type lowercase s. Use the arrow keys to select a session in tmux's picker, then press Enter. Hide Keyboard gives the picker more room."
+                            "Tap Sessions to choose a session, or swipe left/right in the terminal to preview the next/previous session. Release past the threshold to switch. Both use the same alphabetical order without wrapping."
                         )
                         Text(
-                            "Switching in tmux does not change this app's saved session. Reconnect returns to the saved target. To use another target after reconnect, disconnect and change Session in connection settings."
+                            "A confirmed native switch changes only this phone's tmux client and saves the new reconnect target. Other Mac clients and running processes stay where they are."
+                        )
+                        Text(
+                            "For tmux's own picker, choose Open terminal picker in Sessions, or Send Ctrl-B in the terminal actions menu and then type lowercase s. Use arrows and Enter. Manual tmux switching does not update the saved reconnect target."
                         )
                     }
                     Section("Check shared control") {

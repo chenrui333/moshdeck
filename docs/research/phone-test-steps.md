@@ -2,6 +2,8 @@
 
 Run one test at a time on the installed build. These are instructions, not passed results. Record results in [physical-device evidence](physical-device-connection-debug.md). The app should attach to an existing disposable tmux session; do not start these tests in a production shell or interrupt a valuable agent task.
 
+For TestFlight build 4, direct hardware checks were waived for this iteration; these steps are available for voluntary beta feedback. Record the actual installed version/build. Simulator or earlier-build results do not establish acceptance of this build. Native session switching checks are in section 7 below.
+
 Before each test, connect and run:
 
 ```sh
@@ -92,3 +94,18 @@ Do not replace the original recovery-test session. In MoshDeck, connect an attac
 For the agent workload, start Codex in this workspace and ask it to carry out `TASK.md`. Use the phone for a normal prompt, a longer composer prompt and streaming-output inspection. Exercise Ctrl-C during active work and then deliberately resume. Record the agent PID separately from the shell PID, background/recover, and verify that same process before returning to an actual iTerm2 attachment. Repeat the inverse handoff in a separate observation. Agent APIs are not involved, and no private prompts/output should be recorded.
 
 This setup is preparation, not physical acceptance. Record missing tools/hardware and untested interactions explicitly. A passing Python baseline does not pass any phone terminal or agent row.
+
+## 7. Native session switching and shared Mac control (build 4)
+
+Use two existing disposable tmux sessions. If a second session is needed, explicitly create one from a Mac shell with a unique name, for example `tmux new-session -d -s moshdeck-beta-peer`; do not replace an existing session. List them with `tmux list-sessions`. In iTerm2, attach the first with `tmux attach-session -t SESSION_NAME`.
+
+1. Attach the phone to that same session/pane. At a shell prompt, run `echo PHONE` on the phone and `echo MAC` on the Mac. Both screens should reflect both commands. Record the shell PID and pane before switching.
+2. Tap **Sessions** and choose the second session. The phone must change; iTerm2 must stay on the first session. Inspect **Reconnect target** in the panel or terminal actions menu: it changes only after a confirmed native switch.
+3. Return through the picker. Swipe left toward the next session in the displayed alphabetical order, then right to return. Confirm the destination preview, real remote switch and original shell PID. There is no wraparound; use the picker if additional sessions lie between the two test sessions.
+4. Release a short drag before the threshold; no switch should occur. Scroll vertically, select/copy synthetic terminal text, and move horizontally during selection. None should change sessions.
+5. Disconnect/reconnect after a successful native switch. The phone should attach to its newly saved target. Contrast this with **Open terminal picker (Ctrl-B, s)**: manual tmux switching does not update the saved target.
+6. During the separate outage test, confirm swiping and sending are unavailable while reconnecting. Recovery must not replay a gesture or keystrokes.
+7. With both clients on the same session again, disconnect the phone and confirm Mac input still works. Reattach the phone, then detach only iTerm2 with Ctrl-B followed by D; phone input should still work. Reattach both and compare the original pane/shell PID. Do not use `exit`, which ends a shell.
+8. Repeat switching away/back during a disposable coding-agent task. Record survival of the actual agent PID separately; the shell test alone does not prove agent continuity. Enter prompts rather than shell commands while the agent owns input.
+
+If a target disappears or a switch fails, record the error and whether the original attachment remains usable. Do not terminate valuable sessions to manufacture this case. A failed switch must not create a replacement or change the saved target. Report each item separately as PASS, PARTIAL, FAIL or NOT TESTED; include only structural results and sanitized diagnostics, never private output.

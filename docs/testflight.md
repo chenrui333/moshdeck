@@ -14,6 +14,10 @@ Processing subsequently completed. The existing audited encryption declaration (
 
 Direct physical checks remain waived for this iteration. Simulator and local integration results are recorded below; gesture acceptance remains pending beta feedback.
 
+### Local follow-up after build 4
+
+The in-app Shared sessions help now explains native picker/swipe switching and its confirmed reconnect-target update, separately from the manual tmux picker. Build 4 still contains the older manual-only help text; this copy correction is local source for the next build, not part of the distributed IPA. No connection or input behavior changed. Strict Swift formatting, whitespace validation and an arm64 Release simulator build passed. Updated [phone test steps](research/phone-test-steps.md) cover native switching, Mac-client isolation and shared-process checks without treating the hardware waiver as a pass.
+
 ## Previous distribution — September 12, 2026
 
 Version **0.0.1 (1)** is uploaded, processed **VALID**, and **IN_BETA_TESTING** for the internal **Personal Beta** group. The owner is the sole tester and is **INVITED**; installation through TestFlight has not yet been confirmed. External state is **READY_FOR_BETA_SUBMISSION**: no external beta review or public invitation link exists yet.
