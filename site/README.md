@@ -2,7 +2,7 @@
 
 Static landing page, beta setup, support and privacy pages. Source is `public/`; there is no build step, JavaScript, analytics, form, remote font or runtime dependency. The terminal illustration is explicitly labeled and contains synthetic text only.
 
-Intended address: `moshdeck.chenrui.dev`, using Cloudflare Pages Direct Upload, consistent with the owner's existing app site. Publication is pending fresh Cloudflare authentication. There is no public TestFlight link; only the owner internal group is currently enabled.
+Intended address: `moshdeck.chenrui.dev`, using Cloudflare Pages Direct Upload, consistent with the owner's existing app site. Publication is pending fresh Cloudflare authentication. There is no public TestFlight link yet. Build 4 is available to the owner internal group; an external Public Beta group is prepared, but review submission awaits contact details. See [TestFlight status](../docs/testflight.md).
 
 ## Preview
 

@@ -1,0 +1,9 @@
+MoshDeck is an SSH terminal client for iPhone. It has no MoshDeck account, subscription, cloud backend, or server-side execution service. Device-owner authentication (Face ID or passcode) protects local access to the app; it is separate from SSH authentication.
+
+The reviewer supplies a test SSH host reachable from the iPhone. The supported server is macOS OpenSSH with Ed25519 public-key authentication and an existing tmux session. Tailscale is an optional separately installed networking tool; any reachable ordinary SSH endpoint can be configured. Do not use a production host or private development account for review.
+
+Setup: unlock MoshDeck; open Profile / Settings; enter hostname/IP, port (default 22), Mac username, the independently verified OpenSSH host public key, an existing tmux session name, and the full tmux executable path. Use Unlock / show phone public key and Copy public key to authorize this device's public key on the test server. No private key or password export is needed. Create the session on the server first, then Connect.
+
+Test shell commands, keyboard controls, Compose, and native session switching. With two existing tmux sessions, Sessions selects a destination; horizontal swiping previews adjacent sessions. Switching affects only the phone's tmux client. Disconnect ends the attachment; Lock immediately conceals the terminal and requires local authentication again. The server-side tmux process survives disconnection.
+
+This build intentionally excludes the development fixture UI. No shared demo account or public SSH credentials are provided. If a dedicated review environment is required, please contact the review contact before testing.

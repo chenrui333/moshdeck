@@ -14,6 +14,14 @@ Processing subsequently completed. The existing audited encryption declaration (
 
 Direct physical checks remain waived for this iteration. Simulator and local integration results are recorded below; gesture acceptance remains pending beta feedback.
 
+### External beta preparation — September 16, 2026
+
+The owner authorized external beta review and a public invitation link. Created the external **Public Beta** group (`ab2145a1-fb97-4c47-8d86-3e4f321884f5`), assigned build 4, and saved the en-US beta description and feedback address. The existing Personal Beta distribution is unchanged.
+
+**Submission is pending review contact details.** The readiness check reported missing contact first name, last name, email and phone. Name/email are available from the owner context; the phone number (with country code) has been requested. Apple rejected the attempt to save review notes without contact information, so [review notes](beta-review-notes.txt) remain a local draft. No review submission exists at this checkpoint. Do not describe the external build as approved, waiting for review, or publicly available yet.
+
+After the contact number is supplied, save the full review details, rerun `asc validate testflight`, verify there is no existing submission, and submit build 4 through `asc testflight review submit --confirm`. Once Apple approves the build for external testing, enable the group's public link and verify its invitation page before adding it to the website. The public link is currently disabled. No demo credentials or personal development-host access have been supplied to reviewers.
+
 ### Local follow-up after build 4
 
 The in-app Shared sessions help now explains native picker/swipe switching and its confirmed reconnect-target update, separately from the manual tmux picker. Build 4 still contains the older manual-only help text; this copy correction is local source for the next build, not part of the distributed IPA. No connection or input behavior changed. Strict Swift formatting, whitespace validation and an arm64 Release simulator build passed. Updated [phone test steps](research/phone-test-steps.md) cover native switching, Mac-client isolation and shared-process checks without treating the hardware waiver as a pass.
