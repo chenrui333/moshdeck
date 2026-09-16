@@ -2,7 +2,19 @@
 
 On September 9, the owner authorized preparing a TestFlight beta using `asc`, with further physical acceptance collected through beta testing. This does not mark the daily-use MVP or the remaining lifecycle matrix complete. Git pushes and production App Store submission are not part of this checkpoint.
 
-## Current distribution — September 12, 2026
+## Current distribution — build 4, September 16, 2026
+
+Version **0.0.1 (4)** is processed **VALID** and **IN_BETA_TESTING** for the existing internal **Personal Beta** group. Build ID: `c4389b8c-24c7-4759-9ab2-a5664bb513b9`. Group ID: `ed5379bd-32f5-4e5c-a22e-626df71dd3a0`.
+
+After the owner completed Xcode account setup, the preserved build-4 archive exported successfully using automatic signing. No app source changed. The IPA passed strict signature verification, has `get-task-allow=false` and `beta-reports-active=true`, has no provisioning device list, and contains all 10 matching license notices. IPA SHA-256: `96814b25ba2d2203882b8c7b5c8f4b265b5c1eff221decd425568db4b4f8fa56` (7,867,435 bytes).
+
+The upload reservation dry run succeeded, followed by the actual upload. Apple accepted upload `c4389b8c-24c7-4759-9ab2-a5664bb513b9` and reported PROCESSING. The CLI's 60-second discovery wait expired after upload commit; subsequent checks follow the existing upload, without uploading a duplicate. The API supplied no upload checksums, so the requested API checksum comparison was unavailable; the local SHA-256 and signature checks above are independent evidence.
+
+Processing subsequently completed. The existing audited encryption declaration (`usesNonExemptEncryption=false`) was applied, and the en-US What to Test text matches [beta-test-notes.txt](beta-test-notes.txt), apart from its trailing newline. API readbacks confirmed explicit Personal Beta membership and internal testing status. External state remains READY_FOR_BETA_SUBMISSION; no external review, public link, or production App Store submission was initiated. No Git push was performed.
+
+Direct physical checks remain waived for this iteration. Simulator and local integration results are recorded below; gesture acceptance remains pending beta feedback.
+
+## Previous distribution — September 12, 2026
 
 Version **0.0.1 (1)** is uploaded, processed **VALID**, and **IN_BETA_TESTING** for the internal **Personal Beta** group. The owner is the sole tester and is **INVITED**; installation through TestFlight has not yet been confirmed. External state is **READY_FOR_BETA_SUBMISSION**: no external beta review or public invitation link exists yet.
 
@@ -10,7 +22,7 @@ Version **0.0.1 (1)** is uploaded, processed **VALID**, and **IN_BETA_TESTING** 
 - Build: `5aaca512-d147-4f90-9bdd-9b3c6ae0c875`.
 - Internal group: `ed5379bd-32f5-4e5c-a22e-626df71dd3a0`.
 - Uploaded IPA SHA-256: `e210f61cd329ddb43ae012cc17447f6f193141b1e3c790121b563509be498142` (notice-inclusive archive after `5000793`).
-- What to Test: the original build-1 en-US localization was saved and verified by the API response. The repository [beta-test-notes.txt](beta-test-notes.txt) now contains the build-3 draft; it has not been applied to App Store Connect.
+- What to Test: the original build-1 en-US localization was saved and verified by the API response. The repository [beta-test-notes.txt](beta-test-notes.txt) now contains the build-4 instructions; the original build-1 localization remains historical.
 - Encryption metadata: `usesNonExemptEncryption=false`, accepted by App Store Connect. The declaration uses the audited Apple-platform CryptoKit implementation described below and Apple's OS-provided encryption documentation category. Tailscale is external to this app. The build Info.plist remains unchanged; the declaration was recorded on the processed build.
 
 Readbacks confirmed the build/group relationship and internal testing state. No production App Store submission or Git push was performed. This distribution checkpoint does not complete the remaining physical acceptance matrix. Historical preparation notes below describe superseded artifacts and earlier gates.
@@ -114,6 +126,6 @@ Verification passed: 40 core tests, the strengthened seven-test isolated OpenSSH
 
 The signed archive passed strict codesign verification; all 10 license notices match their repository sources, synthetic fixture markers are absent, and no gettext imports were found. Archived executable SHA-256: `963705b3b226f82eab6763c7c0727341ee44e1541409833c5baf0671cdc8d6a2`.
 
-**Upload blocked at distribution signing.** Supplying the existing API credential explicitly allowed a fresh ASC build query, which still returned only build 1 in VALID processing state. Xcode's supported API-key cloud-signing export was then attempted, but returned **Cloud signing permission error** and **No signing certificate "iOS Distribution" found** (exit 70). This refines the earlier No Accounts diagnosis: an API-key route exists, but the current credential could not cloud-sign this export. Xcode's configured account list remains empty; the owner was asked to sign in through Xcode Settings → Accounts. No certificate, API role, or account permissions were altered.
+**Historical signing gate (resolved September 16 above).** Supplying the existing API credential explicitly allowed a fresh ASC build query, which still returned only build 1 in VALID processing state. Xcode's supported API-key cloud-signing export was then attempted, but returned **Cloud signing permission error** and **No signing certificate "iOS Distribution" found** (exit 70). This refines the earlier No Accounts diagnosis: an API-key route exists, but the current credential could not cloud-sign this export. Xcode's configured account list remains empty; the owner was asked to sign in through Xcode Settings → Accounts. No certificate, API role, or account permissions were altered.
 
-There is no build-4 distribution IPA or upload yet. The build-4 What to Test text in `beta-test-notes.txt` is ready but has not been applied remotely. After signing is available, export the preserved archive, verify the IPA's version/bundle/signature and notices, reserve/inspect its upload with `asc builds upload --dry-run`, upload it, wait for processing, apply encryption metadata and test notes, and assign the existing internal Personal Beta group. Do not upload superseded build-2 or build-3 artifacts.
+At that September 13 checkpoint there was no build-4 distribution IPA or upload. The build-4 What to Test text in `beta-test-notes.txt` is ready but has not been applied remotely. After signing is available, export the preserved archive, verify the IPA's version/bundle/signature and notices, reserve/inspect its upload with `asc builds upload --dry-run`, upload it, wait for processing, apply encryption metadata and test notes, and assign the existing internal Personal Beta group. Do not upload superseded build-2 or build-3 artifacts.

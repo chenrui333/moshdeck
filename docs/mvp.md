@@ -1,6 +1,6 @@
 # Daily-use MVP
 
-Status: implementation in progress; internal TestFlight beta available September 12, 2026. The owner accepted the physical feasibility spike. Its code and evidence are preserved in local commits 44a114c, 938b1cc and d317f1d. Version 0.0.1 (1) is in internal beta testing for the owner; this is not completion of daily-use acceptance. See [TestFlight status](testflight.md) and the [beta setup website](../site/README.md). This document defines the new implementation phase; historical spike reports retain their original observations.
+Status: implementation in progress; internal TestFlight build 4 available September 16, 2026. The owner accepted the physical feasibility spike. Its code and evidence are preserved in local commits 44a114c, 938b1cc and d317f1d. Version 0.0.1 (4) is in internal beta testing for the owner; this is not completion of daily-use acceptance. See [TestFlight status](testflight.md) and the [beta setup website](../site/README.md). This document defines the new implementation phase; historical spike reports retain their original observations.
 
 ## Supported workflow
 
