@@ -10,17 +10,25 @@ After the owner completed Xcode account setup, the preserved build-4 archive exp
 
 The upload reservation dry run succeeded, followed by the actual upload. Apple accepted upload `c4389b8c-24c7-4759-9ab2-a5664bb513b9` and reported PROCESSING. The CLI's 60-second discovery wait expired after upload commit; subsequent checks follow the existing upload, without uploading a duplicate. The API supplied no upload checksums, so the requested API checksum comparison was unavailable; the local SHA-256 and signature checks above are independent evidence.
 
-Processing subsequently completed. The existing audited encryption declaration (`usesNonExemptEncryption=false`) was applied, and the en-US What to Test text matches [beta-test-notes.txt](beta-test-notes.txt), apart from its trailing newline. API readbacks confirmed explicit Personal Beta membership and internal testing status. External state remains READY_FOR_BETA_SUBMISSION; no external review, public link, or production App Store submission was initiated. No Git push was performed.
+Processing subsequently completed. The existing audited encryption declaration (`usesNonExemptEncryption=false`) was applied, and the en-US What to Test text matches [beta-test-notes.txt](beta-test-notes.txt), apart from its trailing newline. API readbacks confirmed explicit Personal Beta membership and internal testing status. At the initial internal-distribution checkpoint, external state was READY_FOR_BETA_SUBMISSION. The subsequent external submission is recorded below. No public link, production App Store submission, or Git push has been initiated.
 
 Direct physical checks remain waived for this iteration. Simulator and local integration results are recorded below; gesture acceptance remains pending beta feedback.
 
-### External beta preparation — September 16, 2026
+### External beta submitted — September 16, 2026
 
 The owner authorized external beta review and a public invitation link. Created the external **Public Beta** group (`ab2145a1-fb97-4c47-8d86-3e4f321884f5`), assigned build 4, and saved the en-US beta description and feedback address. The existing Personal Beta distribution is unchanged.
 
-**Submission is pending review contact details.** The readiness check reported missing contact first name, last name, email and phone. Name/email are available from the owner context; the phone number (with country code) has been requested. Apple rejected the attempt to save review notes without contact information, so [review notes](beta-review-notes.txt) remain a local draft. No review submission exists at this checkpoint. Do not describe the external build as approved, waiting for review, or publicly available yet.
+The owner supplied the review contact details, which were saved directly in App Store Connect along with [review instructions](beta-review-notes.txt). Personal contact numbers are not stored in this repository. `asc validate testflight` passed with zero errors, warnings or blocking findings. A fresh submission lookup returned no existing submission before the submit action.
 
-After the contact number is supplied, save the full review details, rerun `asc validate testflight`, verify there is no existing submission, and submit build 4 through `asc testflight review submit --confirm`. Once Apple approves the build for external testing, enable the group's public link and verify its invitation page before adding it to the website. The public link is currently disabled. No demo credentials or personal development-host access have been supplied to reviewers.
+Submission `c4389b8c-24c7-4759-9ab2-a5664bb513b9` was created successfully and reports **WAITING_FOR_REVIEW**. A separate build readback reports external **WAITING_FOR_BETA_REVIEW**, with internal **IN_BETA_TESTING** unchanged. This is submission, not approval or public availability.
+
+Monitor the existing submission with:
+
+```sh
+asc testflight review submissions view --id c4389b8c-24c7-4759-9ab2-a5664bb513b9
+```
+
+Once Apple approves the build for external testing, enable the Public Beta group's public link and verify its invitation page before adding it to the website. The public link is currently disabled. No demo credentials or personal development-host access have been supplied to reviewers.
 
 ### Local follow-up after build 4
 
