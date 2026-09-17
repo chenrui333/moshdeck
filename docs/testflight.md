@@ -30,6 +30,10 @@ asc testflight review submissions view --id c4389b8c-24c7-4759-9ab2-a5664bb513b9
 
 Once Apple approves the build for external testing, enable the Public Beta group's public link and verify its invitation page before adding it to the website. The public link is currently disabled. No demo credentials or personal development-host access have been supplied to reviewers.
 
+### Published website — September 16, 2026
+
+The landing page at https://moshdeck.chenrui.dev/ and privacy policy at https://moshdeck.chenrui.dev/privacy/ are deployed and verified over HTTPS. Both URLs are saved in the en-US TestFlight app localization. Setup and support pages are also available. See [deployment evidence](../site/README.md). This metadata update does not establish beta review approval or enable a public invitation link.
+
 ### Local follow-up after build 4
 
 The in-app Shared sessions help now explains native picker/swipe switching and its confirmed reconnect-target update, separately from the manual tmux picker. Build 4 still contains the older manual-only help text; this copy correction is local source for the next build, not part of the distributed IPA. No connection or input behavior changed. Strict Swift formatting, whitespace validation and an arm64 Release simulator build passed. Updated [phone test steps](research/phone-test-steps.md) cover native switching, Mac-client isolation and shared-process checks without treating the hardware waiver as a pass.

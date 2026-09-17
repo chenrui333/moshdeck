@@ -2,7 +2,7 @@
 
 Static landing page, beta setup, support and privacy pages. Source is `public/`; there is no build step, JavaScript, analytics, form, remote font or runtime dependency. The terminal illustration is explicitly labeled and contains synthetic text only.
 
-Intended address: `moshdeck.chenrui.dev`, using Cloudflare Pages Direct Upload, consistent with the owner's existing app site. Publication is pending fresh Cloudflare authentication. There is no public TestFlight link yet. Build 4 is available to the owner internal group; the external Public Beta group has build 4 assigned and Apple beta review is pending. See [TestFlight status](../docs/testflight.md).
+Live address: [moshdeck.chenrui.dev](https://moshdeck.chenrui.dev/), deployed through Cloudflare Pages Direct Upload in the personal account that owns `chenrui.dev`. The [privacy policy](https://moshdeck.chenrui.dev/privacy/) and [support page](https://moshdeck.chenrui.dev/support/) are public. There is no public TestFlight link yet. Build 4 is available to the owner internal group; the external Public Beta group has build 4 assigned and Apple beta review is pending. See [TestFlight status](../docs/testflight.md).
 
 ## Preview
 
@@ -24,7 +24,7 @@ env -u CLOUDFLARE_API_TOKEN npx --yes wrangler@4.129.0 whoami
 env -u CLOUDFLARE_API_TOKEN npx --yes wrangler@4.129.0 pages deploy site/public --project-name moshdeck --branch main
 ```
 
-Before first publication, inspect the Pages project and custom-domain DNS for collisions. Create a dedicated `moshdeck` project only if absent, attach the intended custom domain, then create its CNAME only if no existing record would be replaced. Verify HTTPS, page content, security headers and an unknown-path 404. Do not change apex-domain or other app records.
+The `moshdeck` Pages project and custom domain now exist. For a new environment, first inspect the project and custom-domain DNS for collisions. Create the project only if absent, attach the intended custom domain, then create its CNAME only if no existing record would be replaced. Verify HTTPS, page content, security headers and an unknown-path 404. Do not change apex-domain or other app records.
 
 ## Content maintenance
 
@@ -39,3 +39,13 @@ Desktop (1440px) and phone (390px) landing-page screenshots were visually review
 First-launch source audit: Release starts on SSH and has blank host, username and trusted host key. Environment profile overrides are Debug-only. The current default has Use tmux off and session `moshdeck-spike`; the published setup explicitly overrides both to the prepared `work` session. This source audit is not a fresh-install physical TestFlight pass.
 
 Cloudflare Pages local emulation also passed: the four public pages return 200, an unknown path serves the custom 404, and CSP/nosniff headers are present. Under those headers, the setup page loads its stylesheet, fits a 320px viewport and reports no browser errors. This verifies local hosting behavior only; cloud authentication and live deployment remain pending.
+
+## Production verification — September 16, 2026
+
+Published source `d074ec0` in deployment `b78bd6e8-4f2f-4519-b77d-b99fd0ed73b9`. Cloudflare reports the deployment successful and custom domain **active**. A new proxied CNAME maps `moshdeck.chenrui.dev` to `moshdeck.pages.dev`; no pre-existing record was replaced. The apex domain and unrelated project/zone settings were unchanged. The personal credentials referenced by the owner's fish configuration authenticated successfully; their values are not copied into this repository.
+
+All four pages and both static assets returned HTTPS 200 with the expected content, CSP and `nosniff` headers; a missing path returned the custom 404. Public DNS-over-HTTPS confirmed the domain's A records. The local resolver temporarily retained a negative lookup, so custom-domain HTTP checks used the published IP with the original hostname/SNI and normal certificate verification. The Pages production hostname also passed without that override. This is HTTP/content verification, not physical iPhone Safari acceptance.
+
+Live verification caught Cloudflare's default email obfuscation rewriting contact links and injecting a script incompatible with this site's CSP. The two addresses now use Cloudflare's documented [per-address exclusion](https://developers.cloudflare.com/waf/tools/scrape-shield/email-address-obfuscation/); the follow-up deployment preserves readable mail links without injected scripts. No zone-wide security setting was changed. The setup/support content now reflects build 4's native picker/swipe switching and Release navigation.
+
+The verified landing/privacy URLs were saved to the en-US TestFlight app localization. External beta review and its public invitation link remain separate from website publication. Git commits remain local; Pages Direct Upload does not push the repository.
